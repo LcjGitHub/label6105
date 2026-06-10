@@ -1318,37 +1318,39 @@ body {
 
 /* Copy Button */
 .copy-btn {
-  font-size: 0.9rem;
-  padding: 0.25rem 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding: 0.3rem 0.6rem;
   border: 1px solid var(--border);
   border-radius: 6px;
   background: rgba(255, 255, 255, 0.04);
   color: var(--text-muted);
   cursor: pointer;
   transition: all 0.2s ease;
-  line-height: 1;
+  line-height: 1.2;
+  white-space: nowrap;
 }
 
 .copy-btn:hover {
   background: var(--accent-glow);
   border-color: var(--accent);
   color: var(--accent);
-  transform: scale(1.05);
 }
 
 .copy-btn:active {
-  transform: scale(0.95);
+  transform: scale(0.97);
 }
 
-.table td:last-child {
+#times-table td:last-child {
   white-space: nowrap;
-  width: 60px;
+  width: 80px;
   text-align: center;
+  padding: 0.4rem 0.5rem;
 }
 
-.table th:last-child {
+#times-table th:last-child {
   text-align: center;
-  width: 60px;
+  width: 80px;
 }
 
 /* Toast */

@@ -75,9 +75,9 @@ async function copyToClipboard(text) {
 }
 
 function buildCopyButton(row) {
-  if (!row.isPeriod) return '<td></td>'
+  if (!row.isPeriod) return ''
   const copyText = `${row.label}：${row.timeStr}`
-  return `<td><button class="copy-btn" type="button" data-copy="${encodeURIComponent(copyText)}" title="复制到剪贴板">📋</button></td>`
+  return `<td><button class="copy-btn" type="button" data-copy="${encodeURIComponent(copyText)}" aria-label="复制${row.label}到剪贴板" title="复制到剪贴板">📋 复制</button></td>`
 }
 
 function todayStr() {
@@ -350,12 +350,15 @@ function renderResults(city, dateStr, data, moon) {
         const rowClass = row.isPeriod
           ? `table__row--period table__row--period-${row.periodType}`
           : `table__row--${row.phase}`
+        const descCell = row.isPeriod
+          ? `<td class="table__desc">${row.desc}</td>`
+          : `<td class="table__desc" colspan="2">${row.desc}</td>`
         return `
     <tr class="table__row ${rowClass}">
       <td>${row.label}</td>
       <td class="table__time">${row.timeStr}</td>
       ${azimuthCell}
-      <td class="table__desc">${row.desc}</td>
+      ${descCell}
       ${buildCopyButton(row)}
     </tr>`
       }
@@ -621,7 +624,6 @@ function renderCompareTable(tableId, rows) {
       <td class="table__time">${row.timeStr}</td>
       ${formatAzimuth(row.azimuth)}
       <td class="table__desc">${row.desc}</td>
-      ${buildCopyButton(row)}
     </tr>`
       }
     )
