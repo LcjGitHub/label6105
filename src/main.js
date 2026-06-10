@@ -821,14 +821,14 @@ function renderCompareSummaryDiff(dataA, dataB, moonA, moonB) {
     <div class="compare-summary-diff__item">
       <div class="compare-summary-diff__label">月相差异</div>
       <div class="compare-summary-diff__value">
-        ${moonA.phase.emoji} ${moonA.phase.name} → ${moonB.phase.emoji} ${moonB.phase.name}
+        ${moonDiff.illumDiffPercent > 0 ? '+' : ''}${moonDiff.illumDiffPercent}%
         ${getMoonBadge(moonDiff.trendClass)}
+        <span class="compare-summary-diff__trend">${moonDiff.trend}</span>
       </div>
       <div class="compare-summary-diff__sub">
-        照度差：${moonDiff.illumDiffPercent > 0 ? '+' : ''}${moonDiff.illumDiffPercent}% ·
-        月龄差：${moonDiff.ageDiffStr}
+        <span>A：${moonA.phase.emoji} ${moonA.phase.name} · ${moonA.ageStr} · ${moonA.illumination}</span>
+        <span>B：${moonB.phase.emoji} ${moonB.phase.name} · ${moonB.ageStr} · ${moonB.illumination}</span>
       </div>
-      <div class="compare-summary-diff__note">${moonDiff.observationNote}</div>
     </div>
   `
 }

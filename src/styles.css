@@ -1054,18 +1054,22 @@ body {
   color: var(--text);
 }
 
+.compare-summary-diff__trend {
+  font-family: var(--sans);
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  margin-left: 0.5rem;
+}
+
 .compare-summary-diff__sub {
   font-size: 0.78rem;
   color: var(--text-muted);
   margin-top: 0.35rem;
   line-height: 1.5;
-}
-
-.compare-summary-diff__note {
-  font-size: 0.78rem;
-  color: var(--excellent);
-  margin-top: 0.35rem;
-  font-weight: 500;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
 }
 
 .compare-summary-diff__badge {
