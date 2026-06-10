@@ -27,6 +27,7 @@ navBtns.forEach((btn) => {
     pages.forEach((p) => {
       p.classList.toggle('page--active', p.id === `page-${page}`)
     })
+    console.log(`当前页面：${PAGE_NAMES[page]}`)
   })
 })
 
@@ -54,16 +55,17 @@ function switchToPage(pageKey) {
   const btn = document.querySelector(`.nav__btn[data-page="${pageKey}"]`)
   if (!btn) return
   btn.click()
-  console.log(`当前页面：${PAGE_NAMES[pageKey]}`)
 }
 
 document.addEventListener('keydown', (e) => {
   if (!e.ctrlKey && !e.metaKey) return
   const num = parseInt(e.key, 10)
-  if (num >= 1 && num <= 3) {
-    e.preventDefault()
-    switchToPage(SHORTCUT_MAP[num])
-  }
+  if (num < 1 || num > 3) return
+  const el = document.activeElement
+  const tag = el ? el.tagName : ''
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (el && el.isContentEditable)) return
+  e.preventDefault()
+  switchToPage(SHORTCUT_MAP[num])
 })
 
 // ── Helpers ──
