@@ -105,10 +105,9 @@ function formatTime(d) {
 
 function renderMoonInfo(moon) {
   document.getElementById('moon-icon').textContent = moon.phase.emoji
-  document.getElementById('moon-phase').innerHTML = `${moon.phase.emoji} ${moon.phase.name}`
+  document.getElementById('moon-phase').textContent = moon.phase.name
   document.getElementById('moon-desc').textContent = moon.phase.desc
   document.getElementById('moon-age').textContent = moon.ageStr
-  document.getElementById('moon-illum').textContent = moon.illumination
   document.getElementById('moon-rise').textContent = moon.moonriseStr
   document.getElementById('moon-set').textContent = moon.moonsetStr
 }
@@ -148,7 +147,7 @@ function renderResults(city, dateStr, data, moon) {
   renderMoonInfo(moon)
 
   resultsEl.hidden = false
-  resultsEl.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  document.getElementById('moon-info').scrollIntoView({ behavior: 'smooth', block: 'nearest' })
 }
 
 calcForm.addEventListener('submit', (e) => {
