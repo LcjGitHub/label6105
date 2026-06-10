@@ -305,6 +305,7 @@ function renderCompareTable(tableId, rows) {
     <tr class="table__row table__row--${row.phase}">
       <td>${row.label}</td>
       <td class="table__time">${row.timeStr}</td>
+      ${formatAzimuth(row.azimuth)}
       <td class="table__desc">${row.desc}</td>
     </tr>`
     )
@@ -314,10 +315,20 @@ function renderCompareTable(tableId, rows) {
 function renderCompareSummary(summaryId, data) {
   const summaryEl = document.getElementById(summaryId)
   const level = data.summary.nightHours >= 3 ? '适合深空观测' : data.summary.nightHours > 0 ? '观测窗口较短' : '无完整天文黑夜'
+  const sunriseAz = data.summary.sunriseAzimuth
+  const sunsetStartAz = data.summary.sunsetStartAzimuth
+  const sunriseAzStr = sunriseAz
+    ? `<span class="azimuth__dir">${sunriseAz.direction}</span> <span class="azimuth__deg">${sunriseAz.degrees}°</span>`
+    : '—'
+  const sunsetStartAzStr = sunsetStartAz
+    ? `<span class="azimuth__dir">${sunsetStartAz.direction}</span> <span class="azimuth__deg">${sunsetStartAz.degrees}°</span>`
+    : '—'
   summaryEl.innerHTML = `
     <h3>观测评估</h3>
     <p class="night-summary__main">${level}</p>
     <ul class="night-summary__list">
+      <li>日出方位：<strong>${sunriseAzStr}</strong></li>
+      <li>日落开始方位：<strong>${sunsetStartAzStr}</strong></li>
       <li>民用暮光结束（暮）：<strong>${formatTime(data.times.dusk)}</strong></li>
       <li>天文暮光开始（暮）：<strong>${formatTime(data.times.nauticalDusk)}</strong></li>
       <li>天文暮光结束（暮）：<strong>${formatTime(data.times.night)}</strong></li>
@@ -329,7 +340,14 @@ function renderCompareSummary(summaryId, data) {
 
 function diffMinutes(timeA, timeB) {
   if (!timeA || !timeB || Number.isNaN(timeA.getTime()) || Number.isNaN(timeB.getTime())) return null
-  return Math.round((timeB - timeA) / (1000 * 60))
+  const minsA = timeA.getHours() * 60 + timeA.getMinutes()
+  const minsB = timeB.getHours() * 60 + timeB.getMinutes()
+  return minsB - minsA
+}
+
+function formatAzimuth(azimuth) {
+  if (!azimuth) return '<td class="table__azimuth table__azimuth--empty">—</td>'
+  return `<td class="table__azimuth"><span class="azimuth__dir">${azimuth.direction}</span><span class="azimuth__deg">${azimuth.degrees}°</span></td>`
 }
 
 function formatDiffMinutes(mins) {
