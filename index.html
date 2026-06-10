@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>天文暮光 · 观测助手</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/src/styles.css" />
+  </head>
+  <body>
+    <div class="stars" aria-hidden="true"></div>
+    <div class="app">
+      <header class="header">
+        <div class="header__brand">
+          <span class="header__icon">🌌</span>
+          <h1>天文暮光 · 观测助手</h1>
+        </div>
+        <nav class="nav" role="tablist">
+          <button class="nav__btn nav__btn--active" data-page="calc" role="tab" aria-selected="true">
+            暮光计算
+          </button>
+          <button class="nav__btn" data-page="calendar" role="tab" aria-selected="false">
+            观测日历
+          </button>
+        </nav>
+      </header>
+
+      <main>
+        <!-- Page 1: Twilight Calculator -->
+        <section id="page-calc" class="page page--active">
+          <div class="card card--form">
+            <h2 class="card__title">位置与日期</h2>
+            <form id="calc-form" class="form">
+              <div class="form__row">
+                <label class="form__label" for="city-preset">城市预设</label>
+                <select id="city-preset" class="form__input"></select>
+              </div>
+              <div class="form__grid">
+                <div class="form__row">
+                  <label class="form__label" for="latitude">纬度 (°N)</label>
+                  <input
+                    type="number"
+                    id="latitude"
+                    class="form__input"
+                    step="0.0001"
+                    min="-90"
+                    max="90"
+                    required
+                  />
+                </div>
+                <div class="form__row">
+                  <label class="form__label" for="longitude">经度 (°E)</label>
+                  <input
+                    type="number"
+                    id="longitude"
+                    class="form__input"
+                    step="0.0001"
+                    min="-180"
+                    max="180"
+                    required
+                  />
+                </div>
+              </div>
+              <div class="form__row">
+                <label class="form__label" for="date">日期</label>
+                <input type="date" id="date" class="form__input" required />
+              </div>
+              <button type="submit" class="btn btn--primary">计算暮光时段</button>
+            </form>
+          </div>
+
+          <div id="results" class="results" hidden>
+            <div class="card">
+              <h2 class="card__title">
+                <span id="result-location"></span>
+                <span class="card__subtitle" id="result-date"></span>
+              </h2>
+              <div class="timeline" id="timeline"></div>
+            </div>
+            <div class="card">
+              <h2 class="card__title">详细时刻表</h2>
+              <table class="table" id="times-table">
+                <thead>
+                  <tr>
+                    <th>时段</th>
+                    <th>时刻</th>
+                    <th>说明</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+            <div class="card card--highlight" id="night-summary"></div>
+          </div>
+        </section>
+
+        <!-- Page 2: Observation Calendar -->
+        <section id="page-calendar" class="page">
+          <div class="card card--form">
+            <h2 class="card__title">本月观测日历</h2>
+            <form id="calendar-form" class="form form--inline">
+              <div class="form__row">
+                <label class="form__label" for="cal-city">城市</label>
+                <select id="cal-city" class="form__input"></select>
+              </div>
+              <div class="form__row">
+                <label class="form__label" for="cal-month">月份</label>
+                <input type="month" id="cal-month" class="form__input" />
+              </div>
+              <button type="submit" class="btn btn--primary">生成日历</button>
+            </form>
+          </div>
+
+          <div id="calendar-wrap" class="calendar-wrap" hidden>
+            <div class="calendar-header">
+              <h2 id="cal-title" class="calendar-header__title"></h2>
+              <div class="legend">
+                <span class="legend__item legend__item--excellent">极佳 ≥5h</span>
+                <span class="legend__item legend__item--good">良好 ≥3h</span>
+                <span class="legend__item legend__item--fair">一般 ≥1h</span>
+                <span class="legend__item legend__item--poor">不适宜</span>
+              </div>
+            </div>
+            <div class="calendar" id="calendar-grid"></div>
+            <p class="calendar-note">
+              依据天文黑夜时长（太阳高度 &lt; −18°）评估 Deep-Sky 观测适宜度；高纬度夏季可能出现白夜。
+            </p>
+          </div>
+        </section>
+      </main>
+
+      <footer class="footer">
+        <p>纯前端计算 · SunCalc 天文算法 · 数据均为本地 Mock</p>
+      </footer>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
