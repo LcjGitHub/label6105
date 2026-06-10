@@ -136,6 +136,36 @@ function formatNightHours(h) {
   return `${hrs} 小时 ${mins} 分`
 }
 
+function formatAzimuth(azimuth) {
+  if (!azimuth) return '<td class="table__azimuth table__azimuth--empty">—</td>'
+  return `<td class="table__azimuth"><span class="azimuth__dir">${azimuth.direction}</span><span class="azimuth__deg">${azimuth.degrees}°</span></td>`
+}
+
+function formatAzimuthInline(azimuth) {
+  if (!azimuth) return '—'
+  return `<span class="azimuth__dir">${azimuth.direction}</span> <span class="azimuth__deg">${azimuth.degrees}°</span>`
+}
+
+function getTableRowClass(row) {
+  return row.isPeriod
+    ? `table__row--period table__row--period-${row.periodType}`
+    : `table__row--${row.phase}`
+}
+
+function getScoreData(lat, dateStr, data, moon) {
+  const moonIllum = parseFloat(moon.illumination) / 100
+  return computeObservationScore({
+    nightHours: data.summary.nightHours,
+    lat,
+    dateStr,
+    moonIllumination: moonIllum,
+    nightStart: data.summary.nightStart,
+    nightEnd: data.summary.nightEnd,
+    moonrise: moon.moonrise,
+    moonset: moon.moonset,
+  })
+}
+
 // ── Page 1: Calculator ──
 const cityPreset = document.getElementById('city-preset')
 const latInput = document.getElementById('latitude')
@@ -210,11 +240,7 @@ function buildTimelineSegments(times, goldenHours, blueHours) {
   return segments
 }
 
-function renderTimeline(keyTimes, summary, times) {
-  const timeline = document.getElementById('timeline')
-  const { goldenHours, blueHours } = summary
-  const segments = buildTimelineSegments(times, goldenHours, blueHours)
-
+function buildTimelineMarkers(keyTimes, times, goldenHours, blueHours) {
   const morningMarkers = [
     { label: '天文晨光结束', time: times.nightEnd, key: 'nightEnd' },
     { label: '航海晨光结束', time: times.nauticalDawn, key: 'nauticalDawn' },
@@ -224,8 +250,11 @@ function renderTimeline(keyTimes, summary, times) {
   const eveningMarkers = keyTimes.filter((k) =>
     ['dusk', 'nauticalDusk', 'night'].includes(k.key),
   )
+  return { morningMarkers, eveningMarkers }
+}
 
-  timeline.innerHTML = `
+function renderTimelineBar(segments) {
+  return `
     <div class="timeline__bar">
       ${segments.map((s) => `
         <div class="timeline__segment ${s.className}" style="left:${s.left.toFixed(2)}%;width:${s.width.toFixed(2)}%">
@@ -234,59 +263,79 @@ function renderTimeline(keyTimes, summary, times) {
         </div>
       `).join('')}
     </div>
+  `
+}
+
+function renderPhotoPeriods(goldenHours, blueHours, compact = false) {
+  const suffix = compact ? '' : '时刻'
+  return `
     <div class="timeline__photography">
       <div class="photo-period photo-period--blue-morning">
-        <span class="photo-period__label">🌅 晨蓝调时刻</span>
+        <span class="photo-period__label">🌅 晨蓝调${suffix}</span>
         <span class="photo-period__time">${blueHours.morning.startStr} → ${blueHours.morning.endStr}</span>
       </div>
       <div class="photo-period photo-period--golden-morning">
-        <span class="photo-period__label">🌞 晨黄金时刻</span>
+        <span class="photo-period__label">🌞 晨黄金${suffix}</span>
         <span class="photo-period__time">${goldenHours.morning.startStr} → ${goldenHours.morning.endStr}</span>
       </div>
       <div class="photo-period photo-period--golden-evening">
-        <span class="photo-period__label">🌇 暮黄金时刻</span>
+        <span class="photo-period__label">🌇 暮黄金${suffix}</span>
         <span class="photo-period__time">${goldenHours.evening.startStr} → ${goldenHours.evening.endStr}</span>
       </div>
       <div class="photo-period photo-period--blue-evening">
-        <span class="photo-period__label">🌆 暮蓝调时刻</span>
+        <span class="photo-period__label">🌆 暮蓝调${suffix}</span>
         <span class="photo-period__time">${blueHours.evening.startStr} → ${blueHours.evening.endStr}</span>
       </div>
     </div>
+  `
+}
+
+function renderMarkerGroup(title, markers, isMorning = false) {
+  return `
     <div class="timeline__markers-wrap">
-      <div class="timeline__markers-title">早晨暮光关键节点</div>
-      <div class="timeline__markers timeline__markers--morning">
-        ${morningMarkers
-          .filter((m) => m.time)
+      <div class="timeline__markers-title">${title}</div>
+      <div class="timeline__markers${isMorning ? ' timeline__markers--morning' : ''}">
+        ${markers
           .map(
             (ev) => `
           <div class="timeline__marker">
-            <span class="timeline__dot timeline__dot--blue"></span>
+            <span class="timeline__dot${isMorning ? ' timeline__dot--blue' : ''}"></span>
             <span class="timeline__label">${ev.label}</span>
-            <span class="timeline__time">${formatTime(ev.time)}</span>
+            <span class="timeline__time">${ev.timeStr || formatTime(ev.time)}</span>
           </div>`
           )
           .join('')}
       </div>
     </div>
-    <div class="timeline__markers-wrap">
-      <div class="timeline__markers-title">傍晚暮光关键节点</div>
-      <div class="timeline__markers">
-        ${eveningMarkers
-          .map(
-            (ev) => `
-          <div class="timeline__marker">
-            <span class="timeline__dot"></span>
-            <span class="timeline__label">${ev.label}</span>
-            <span class="timeline__time">${ev.timeStr}</span>
-          </div>`
-          )
-          .join('')}
-      </div>
-    </div>
+  `
+}
+
+function renderTimelineNight(summary) {
+  return `
     <div class="timeline__night">
       <strong>天文黑夜</strong>：${formatTime(summary.nightStart)} → 次日 ${formatTime(summary.nightEnd)}
       （${formatNightHours(summary.nightHours)}）
     </div>
+  `
+}
+
+function renderTimeline(keyTimes, summary, times, options = {}) {
+  const { compact = false, targetId = 'timeline' } = options
+  const timeline = document.getElementById(targetId)
+  if (!timeline) return
+  const { goldenHours, blueHours } = summary
+  const segments = buildTimelineSegments(times, goldenHours, blueHours)
+  const { morningMarkers, eveningMarkers } = buildTimelineMarkers(keyTimes, times, goldenHours, blueHours)
+
+  const morningTitle = compact ? '早晨关键节点' : '早晨暮光关键节点'
+  const eveningTitle = compact ? '傍晚关键节点' : '傍晚暮光关键节点'
+
+  timeline.innerHTML = `
+    ${renderTimelineBar(segments)}
+    ${renderPhotoPeriods(goldenHours, blueHours, compact)}
+    ${renderMarkerGroup(morningTitle, morningMarkers.filter((m) => m.time), true)}
+    ${renderMarkerGroup(eveningTitle, eveningMarkers)}
+    ${renderTimelineNight(summary)}
   `
 }
 
@@ -394,99 +443,18 @@ function renderScoreCard(lat, dateStr, data, moon, city, targetId = 'score-card'
   `
 }
 
-function renderResults(city, dateStr, data, moon) {
+function updateResultHeader(city, dateStr) {
   document.getElementById('result-location').textContent = `${city.name}（${city.lat}°N, ${city.lng}°E）`
   document.getElementById('result-date').textContent = dateStr
+}
 
+function renderResults(city, dateStr, data, moon) {
+  updateResultHeader(city, dateStr)
   renderTimeline(data.keyTimes, data.summary, data.times)
   renderScoreCard(city.lat, dateStr, data, moon, city)
-
-  const tbody = document.querySelector('#times-table tbody')
-  tbody.innerHTML = data.allRows
-    .map(
-      (row) => {
-        const azimuthCell = row.azimuth
-          ? `<td class="table__azimuth"><span class="azimuth__dir">${row.azimuth.direction}</span><span class="azimuth__deg">${row.azimuth.degrees}°</span></td>`
-          : `<td class="table__azimuth table__azimuth--empty">—</td>`
-        const rowClass = row.isPeriod
-          ? `table__row--period table__row--period-${row.periodType}`
-          : `table__row--${row.phase}`
-        const descCell = row.isPeriod
-          ? `<td class="table__desc">${row.desc}</td>`
-          : `<td class="table__desc" colspan="2">${row.desc}</td>`
-        return `
-    <tr class="table__row ${rowClass}">
-      <td>${row.label}</td>
-      <td class="table__time">${row.timeStr}</td>
-      ${azimuthCell}
-      ${descCell}
-      ${buildCopyButton(row)}
-    </tr>`
-      }
-    )
-    .join('')
-
-  const nightSummary = document.getElementById('night-summary')
-  const moonIllum = parseFloat(moon.illumination) / 100
-  const scoreData = computeObservationScore({
-    nightHours: data.summary.nightHours,
-    lat: city.lat,
-    dateStr,
-    moonIllumination: moonIllum,
-    nightStart: data.summary.nightStart,
-    nightEnd: data.summary.nightEnd,
-    moonrise: moon.moonrise,
-    moonset: moon.moonset,
-  })
-  const sunriseAz = data.summary.sunriseAzimuth
-  const sunsetStartAz = data.summary.sunsetStartAzimuth
-  const sunriseAzStr = sunriseAz
-    ? `<span class="azimuth__dir">${sunriseAz.direction}</span> <span class="azimuth__deg">${sunriseAz.degrees}°</span>`
-    : '—'
-  const sunsetStartAzStr = sunsetStartAz
-    ? `<span class="azimuth__dir">${sunsetStartAz.direction}</span> <span class="azimuth__deg">${sunsetStartAz.degrees}°</span>`
-    : '—'
-  const { goldenHours, blueHours } = data.summary
-  nightSummary.innerHTML = `
-    <h3>观测评估</h3>
-    <p class="night-summary__main night-summary--${scoreData.level.class}">${scoreData.level.label} · 综合评分 ${scoreData.total}/100</p>
-    <h3 class="photo-section-title">📸 摄影师时段</h3>
-    <div class="photo-grid">
-      <div class="photo-card photo-card--golden">
-        <div class="photo-card__header">🌞 晨黄金时刻</div>
-        <div class="photo-card__time">${goldenHours.morning.startStr} → ${goldenHours.morning.endStr}</div>
-        <div class="photo-card__desc">日出后一小时，暖金色光线</div>
-      </div>
-      <div class="photo-card photo-card--blue">
-        <div class="photo-card__header">🌅 晨蓝调时刻</div>
-        <div class="photo-card__time">${blueHours.morning.startStr} → ${blueHours.morning.endStr}</div>
-        <div class="photo-card__desc">民用晨光期间，冷蓝色调</div>
-      </div>
-      <div class="photo-card photo-card--golden">
-        <div class="photo-card__header">🌇 暮黄金时刻</div>
-        <div class="photo-card__time">${goldenHours.evening.startStr} → ${goldenHours.evening.endStr}</div>
-        <div class="photo-card__desc">日落前一小时，暖金色光线</div>
-      </div>
-      <div class="photo-card photo-card--blue">
-        <div class="photo-card__header">🌆 暮蓝调时刻</div>
-        <div class="photo-card__time">${blueHours.evening.startStr} → ${blueHours.evening.endStr}</div>
-        <div class="photo-card__desc">民用暮光期间，冷蓝色调</div>
-      </div>
-    </div>
-    <h3>🌌 天文观测</h3>
-    <ul class="night-summary__list">
-      <li>日出方位：<strong>${sunriseAzStr}</strong></li>
-      <li>日落开始方位：<strong>${sunsetStartAzStr}</strong></li>
-      <li>民用暮光结束（暮）：<strong>${formatTime(data.times.dusk)}</strong></li>
-      <li>天文暮光开始（暮）：<strong>${formatTime(data.times.nauticalDusk)}</strong></li>
-      <li>天文暮光结束（暮）：<strong>${formatTime(data.times.night)}</strong></li>
-      <li>天文晨光结束（晨）：<strong>${formatTime(data.times.nightEnd)}</strong></li>
-      <li>天文黑夜时长：<strong>${formatNightHours(data.summary.nightHours)}</strong></li>
-    </ul>
-  `
-
+  renderTimesTable('#times-table', data.allRows, { withCopyButton: true, withColspanDesc: true })
+  renderNightSummary('night-summary', data, city.lat, dateStr, moon)
   renderMoonInfo(moon)
-
   resultsEl.hidden = false
   document.getElementById('score-card').scrollIntoView({ behavior: 'smooth', block: 'nearest' })
 }
@@ -592,153 +560,81 @@ function applyCompareCity(cityId) {
 compareCity.addEventListener('change', () => applyCompareCity(compareCity.value))
 
 function renderCompareTimeline(timelineId, keyTimes, summary, times) {
-  const timeline = document.getElementById(timelineId)
-  const { goldenHours, blueHours } = summary
-  const segments = buildTimelineSegments(times, goldenHours, blueHours)
-
-  const morningMarkers = [
-    { label: '天文晨光结束', time: times.nightEnd, key: 'nightEnd' },
-    { label: '航海晨光结束', time: times.nauticalDawn, key: 'nauticalDawn' },
-    { label: '晨蓝调开始', time: blueHours.morning.start, key: 'blueMorningStart', custom: true },
-    { label: '晨黄金开始', time: goldenHours.morning.start, key: 'goldenMorningStart', custom: true },
-  ]
-  const eveningMarkers = keyTimes.filter((k) =>
-    ['dusk', 'nauticalDusk', 'night'].includes(k.key),
-  )
-
-  timeline.innerHTML = `
-    <div class="timeline__bar">
-      ${segments.map((s) => `
-        <div class="timeline__segment ${s.className}" style="left:${s.left.toFixed(2)}%;width:${s.width.toFixed(2)}%">
-          <span class="segment-label">${s.label}</span>
-          ${s.subLabel ? `<span class="segment-sub">${s.subLabel}</span>` : ''}
-        </div>
-      `).join('')}
-    </div>
-    <div class="timeline__photography">
-      <div class="photo-period photo-period--blue-morning">
-        <span class="photo-period__label">🌅 晨蓝调</span>
-        <span class="photo-period__time">${blueHours.morning.startStr} → ${blueHours.morning.endStr}</span>
-      </div>
-      <div class="photo-period photo-period--golden-morning">
-        <span class="photo-period__label">🌞 晨黄金</span>
-        <span class="photo-period__time">${goldenHours.morning.startStr} → ${goldenHours.morning.endStr}</span>
-      </div>
-      <div class="photo-period photo-period--golden-evening">
-        <span class="photo-period__label">🌇 暮黄金</span>
-        <span class="photo-period__time">${goldenHours.evening.startStr} → ${goldenHours.evening.endStr}</span>
-      </div>
-      <div class="photo-period photo-period--blue-evening">
-        <span class="photo-period__label">🌆 暮蓝调</span>
-        <span class="photo-period__time">${blueHours.evening.startStr} → ${blueHours.evening.endStr}</span>
-      </div>
-    </div>
-    <div class="timeline__markers-wrap">
-      <div class="timeline__markers-title">早晨关键节点</div>
-      <div class="timeline__markers timeline__markers--morning">
-        ${morningMarkers
-          .filter((m) => m.time)
-          .map(
-            (ev) => `
-          <div class="timeline__marker">
-            <span class="timeline__dot timeline__dot--blue"></span>
-            <span class="timeline__label">${ev.label}</span>
-            <span class="timeline__time">${formatTime(ev.time)}</span>
-          </div>`
-          )
-          .join('')}
-      </div>
-    </div>
-    <div class="timeline__markers-wrap">
-      <div class="timeline__markers-title">傍晚关键节点</div>
-      <div class="timeline__markers">
-        ${eveningMarkers
-          .map(
-            (ev) => `
-          <div class="timeline__marker">
-            <span class="timeline__dot"></span>
-            <span class="timeline__label">${ev.label}</span>
-            <span class="timeline__time">${ev.timeStr}</span>
-          </div>`
-          )
-          .join('')}
-      </div>
-    </div>
-    <div class="timeline__night">
-      <strong>天文黑夜</strong>：${formatTime(summary.nightStart)} → 次日 ${formatTime(summary.nightEnd)}
-      （${formatNightHours(summary.nightHours)}）
-    </div>
-  `
+  renderTimeline(keyTimes, summary, times, { compact: true, targetId: timelineId })
 }
 
-function renderCompareTable(tableId, rows) {
-  const tbody = document.querySelector(`#${tableId} tbody`)
-  tbody.innerHTML = rows
-    .map(
-      (row) => {
-        const rowClass = row.isPeriod
-          ? `table__row--period table__row--period-${row.periodType}`
-          : `table__row--${row.phase}`
-        return `
+function renderTableRow(row, options = {}) {
+  const { withCopyButton = false, withColspanDesc = false } = options
+  const rowClass = getTableRowClass(row)
+  const descCell = withColspanDesc && !row.isPeriod
+    ? `<td class="table__desc" colspan="2">${row.desc}</td>`
+    : `<td class="table__desc">${row.desc}</td>`
+  const copyCell = withCopyButton ? buildCopyButton(row) : ''
+  return `
     <tr class="table__row ${rowClass}">
       <td>${row.label}</td>
       <td class="table__time">${row.timeStr}</td>
       ${formatAzimuth(row.azimuth)}
-      <td class="table__desc">${row.desc}</td>
+      ${descCell}
+      ${copyCell}
     </tr>`
-      }
-    )
-    .join('')
+}
+
+function renderTimesTable(tableId, rows, options = {}) {
+  const selector = tableId.startsWith('#') ? tableId : `#${tableId}`
+  const tbody = document.querySelector(`${selector} tbody`)
+  if (!tbody) return
+  tbody.innerHTML = rows.map((row) => renderTableRow(row, options)).join('')
 }
 
 function renderCompareSummary(summaryId, data, lat, dateStr, moon) {
-  const summaryEl = document.getElementById(summaryId)
-  const moonIllum = parseFloat(moon.illumination) / 100
-  const scoreData = computeObservationScore({
-    nightHours: data.summary.nightHours,
-    lat,
-    dateStr,
-    moonIllumination: moonIllum,
-    nightStart: data.summary.nightStart,
-    nightEnd: data.summary.nightEnd,
-    moonrise: moon.moonrise,
-    moonset: moon.moonset,
-  })
-  const sunriseAz = data.summary.sunriseAzimuth
-  const sunsetStartAz = data.summary.sunsetStartAzimuth
-  const sunriseAzStr = sunriseAz
-    ? `<span class="azimuth__dir">${sunriseAz.direction}</span> <span class="azimuth__deg">${sunriseAz.degrees}°</span>`
-    : '—'
-  const sunsetStartAzStr = sunsetStartAz
-    ? `<span class="azimuth__dir">${sunsetStartAz.direction}</span> <span class="azimuth__deg">${sunsetStartAz.degrees}°</span>`
-    : '—'
-  const { goldenHours, blueHours } = data.summary
-  summaryEl.innerHTML = `
-    <h3>观测评估</h3>
-    <p class="night-summary__main night-summary--${scoreData.level.class}">${scoreData.level.label} · 综合评分 ${scoreData.total}/100</p>
-    <h3 class="photo-section-title">📸 摄影师时段</h3>
-    <div class="photo-grid photo-grid--compact">
+  renderNightSummary(summaryId, data, lat, dateStr, moon, { compact: true })
+}
+
+function renderPhotoCards(goldenHours, blueHours, compact = false) {
+  const suffix = compact ? '' : '时刻'
+  const gridClass = compact ? 'photo-grid photo-grid--compact' : 'photo-grid'
+  const descText = compact
+    ? ['', '', '', '']
+    : [
+        '日出后一小时，暖金色光线',
+        '民用晨光期间，冷蓝色调',
+        '日落前一小时，暖金色光线',
+        '民用暮光期间，冷蓝色调',
+      ]
+  return `
+    <div class="${gridClass}">
       <div class="photo-card photo-card--golden">
-        <div class="photo-card__header">🌞 晨黄金</div>
+        <div class="photo-card__header">🌞 晨黄金${suffix}</div>
         <div class="photo-card__time">${goldenHours.morning.startStr} → ${goldenHours.morning.endStr}</div>
+        ${descText[0] ? `<div class="photo-card__desc">${descText[0]}</div>` : ''}
       </div>
       <div class="photo-card photo-card--blue">
-        <div class="photo-card__header">🌅 晨蓝调</div>
+        <div class="photo-card__header">🌅 晨蓝调${suffix}</div>
         <div class="photo-card__time">${blueHours.morning.startStr} → ${blueHours.morning.endStr}</div>
+        ${descText[1] ? `<div class="photo-card__desc">${descText[1]}</div>` : ''}
       </div>
       <div class="photo-card photo-card--golden">
-        <div class="photo-card__header">🌇 暮黄金</div>
+        <div class="photo-card__header">🌇 暮黄金${suffix}</div>
         <div class="photo-card__time">${goldenHours.evening.startStr} → ${goldenHours.evening.endStr}</div>
+        ${descText[2] ? `<div class="photo-card__desc">${descText[2]}</div>` : ''}
       </div>
       <div class="photo-card photo-card--blue">
-        <div class="photo-card__header">🌆 暮蓝调</div>
+        <div class="photo-card__header">🌆 暮蓝调${suffix}</div>
         <div class="photo-card__time">${blueHours.evening.startStr} → ${blueHours.evening.endStr}</div>
+        ${descText[3] ? `<div class="photo-card__desc">${descText[3]}</div>` : ''}
       </div>
     </div>
-    <h3>🌌 天文观测</h3>
+  `
+}
+
+function renderAstroList(data) {
+  const sunriseAz = data.summary.sunriseAzimuth
+  const sunsetStartAz = data.summary.sunsetStartAzimuth
+  return `
     <ul class="night-summary__list">
-      <li>日出方位：<strong>${sunriseAzStr}</strong></li>
-      <li>日落开始方位：<strong>${sunsetStartAzStr}</strong></li>
+      <li>日出方位：<strong>${formatAzimuthInline(sunriseAz)}</strong></li>
+      <li>日落开始方位：<strong>${formatAzimuthInline(sunsetStartAz)}</strong></li>
       <li>民用暮光结束（暮）：<strong>${formatTime(data.times.dusk)}</strong></li>
       <li>天文暮光开始（暮）：<strong>${formatTime(data.times.nauticalDusk)}</strong></li>
       <li>天文暮光结束（暮）：<strong>${formatTime(data.times.night)}</strong></li>
@@ -748,16 +644,27 @@ function renderCompareSummary(summaryId, data, lat, dateStr, moon) {
   `
 }
 
+function renderNightSummary(targetId, data, lat, dateStr, moon, options = {}) {
+  const { compact = false } = options
+  const summaryEl = document.getElementById(targetId)
+  if (!summaryEl) return
+  const scoreData = getScoreData(lat, dateStr, data, moon)
+  const { goldenHours, blueHours } = data.summary
+  summaryEl.innerHTML = `
+    <h3>观测评估</h3>
+    <p class="night-summary__main night-summary--${scoreData.level.class}">${scoreData.level.label} · 综合评分 ${scoreData.total}/100</p>
+    <h3 class="photo-section-title">📸 摄影师时段</h3>
+    ${renderPhotoCards(goldenHours, blueHours, compact)}
+    <h3>🌌 天文观测</h3>
+    ${renderAstroList(data)}
+  `
+}
+
 function diffMinutes(timeA, timeB) {
   if (!timeA || !timeB || Number.isNaN(timeA.getTime()) || Number.isNaN(timeB.getTime())) return null
   const minsA = timeA.getHours() * 60 + timeA.getMinutes()
   const minsB = timeB.getHours() * 60 + timeB.getMinutes()
   return minsB - minsA
-}
-
-function formatAzimuth(azimuth) {
-  if (!azimuth) return '<td class="table__azimuth table__azimuth--empty">—</td>'
-  return `<td class="table__azimuth"><span class="azimuth__dir">${azimuth.direction}</span><span class="azimuth__deg">${azimuth.degrees}°</span></td>`
 }
 
 function formatDiffMinutes(mins) {
@@ -893,26 +800,25 @@ function renderCompareSummaryDiff(dataA, dataB, moonA, moonB) {
   `
 }
 
-function renderCompareResults(city, dateStrA, dateStrB, dataA, dataB, moonA, moonB) {
+function updateCompareHeader(city, dateStrA, dateStrB) {
   document.getElementById('compare-location').textContent = `${city.name}（${city.lat}°N, ${city.lng}°E）`
   document.getElementById('compare-title-a').textContent = `日期 A · ${dateStrA}`
   document.getElementById('compare-title-b').textContent = `日期 B · ${dateStrB}`
+}
 
-  renderCompareTimeline('compare-timeline-a', dataA.keyTimes, dataA.summary, dataA.times)
-  renderCompareTimeline('compare-timeline-b', dataB.keyTimes, dataB.summary, dataB.times)
+function renderCompareSide(suffix, data, moon, city, dateStr) {
+  renderCompareTimeline(`compare-timeline-${suffix}`, data.keyTimes, data.summary, data.times)
+  renderScoreCard(city.lat, dateStr, data, moon, null, `score-card-${suffix}`)
+  renderTimesTable(`compare-table-${suffix}`, data.allRows)
+  renderCompareSummary(`compare-summary-${suffix}`, data, city.lat, dateStr, moon)
+}
 
-  renderScoreCard(city.lat, dateStrA, dataA, moonA, null, 'score-card-a')
-  renderScoreCard(city.lat, dateStrB, dataB, moonB, null, 'score-card-b')
-
-  renderCompareTable('compare-table-a', dataA.allRows)
-  renderCompareTable('compare-table-b', dataB.allRows)
-
-  renderCompareSummary('compare-summary-a', dataA, city.lat, dateStrA, moonA)
-  renderCompareSummary('compare-summary-b', dataB, city.lat, dateStrB, moonB)
-
+function renderCompareResults(city, dateStrA, dateStrB, dataA, dataB, moonA, moonB) {
+  updateCompareHeader(city, dateStrA, dateStrB)
+  renderCompareSide('a', dataA, moonA, city, dateStrA)
+  renderCompareSide('b', dataB, moonB, city, dateStrB)
   renderDiffTable(dataA, dataB)
   renderCompareSummaryDiff(dataA, dataB, moonA, moonB)
-
   compareResults.hidden = false
 }
 
