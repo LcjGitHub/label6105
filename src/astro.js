@@ -55,11 +55,13 @@ function diffHours(start, end) {
 export function computeTwilightTimes(lat, lng, dateStr) {
   const date = parseLocalDate(dateStr)
   const times = SunCalc.getTimes(date, lat, lng)
+  const azimuths = computeAzimuthForEvents(lat, lng, times)
 
   const rows = TIME_EVENTS.map((ev) => ({
     ...ev,
     time: times[ev.key],
     timeStr: formatTime(times[ev.key]),
+    azimuth: azimuths[ev.key] || null,
   }))
 
   const nightStart = times.night
@@ -73,6 +75,7 @@ export function computeTwilightTimes(lat, lng, dateStr) {
     date,
     times,
     rows,
+    azimuths,
     keyTimes: KEY_EVENTS.map((ev) => ({
       ...ev,
       time: times[ev.key],
@@ -85,6 +88,8 @@ export function computeTwilightTimes(lat, lng, dateStr) {
       civilTwilightEvening,
       astronomicalNight,
       solarNoon: times.solarNoon,
+      sunriseAzimuth: azimuths.sunrise,
+      sunsetAzimuth: azimuths.sunset,
     },
   }
 }
@@ -178,6 +183,59 @@ export function computeMoonInfo(lat, lng, dateStr) {
     moonriseStr: formatTime(times.rise, '未升起'),
     moonsetStr: formatTime(times.set, '未落下'),
   }
+}
+
+const COMPASS_DIRECTIONS = [
+  { min: 0, max: 11.25, label: '正北' },
+  { min: 11.25, max: 33.75, label: '北偏东' },
+  { min: 33.75, max: 56.25, label: '东北' },
+  { min: 56.25, max: 78.75, label: '东偏北' },
+  { min: 78.75, max: 101.25, label: '正东' },
+  { min: 101.25, max: 123.75, label: '东偏南' },
+  { min: 123.75, max: 146.25, label: '东南' },
+  { min: 146.25, max: 168.75, label: '南偏东' },
+  { min: 168.75, max: 191.25, label: '正南' },
+  { min: 191.25, max: 213.75, label: '南偏西' },
+  { min: 213.75, max: 236.25, label: '西南' },
+  { min: 236.25, max: 258.75, label: '西偏南' },
+  { min: 258.75, max: 281.25, label: '正西' },
+  { min: 281.25, max: 303.75, label: '西偏北' },
+  { min: 303.75, max: 326.25, label: '西北' },
+  { min: 326.25, max: 348.75, label: '北偏西' },
+  { min: 348.75, max: 360, label: '正北' },
+]
+
+function sunAzimuthToCompassDegrees(azimuthRad) {
+  let deg = (azimuthRad * 180) / Math.PI + 180
+  if (deg < 0) deg += 360
+  if (deg >= 360) deg -= 360
+  return deg
+}
+
+export function getCompassDirection(azimuthDeg) {
+  const dir = COMPASS_DIRECTIONS.find((d) => azimuthDeg >= d.min && azimuthDeg < d.max)
+  return dir ? dir.label : '—'
+}
+
+export function computeSunAzimuth(lat, lng, date) {
+  if (!date || Number.isNaN(date.getTime())) return null
+  const pos = SunCalc.getPosition(date, lat, lng)
+  const degrees = sunAzimuthToCompassDegrees(pos.azimuth)
+  return {
+    degrees: Number(degrees.toFixed(1)),
+    direction: getCompassDirection(degrees),
+  }
+}
+
+function computeAzimuthForEvents(lat, lng, times) {
+  const result = {}
+  const eventsWithAzimuth = ['sunrise', 'sunriseEnd', 'sunset', 'sunsetStart']
+  for (const key of eventsWithAzimuth) {
+    if (times[key]) {
+      result[key] = computeSunAzimuth(lat, lng, times[key])
+    }
+  }
+  return result
 }
 
 export { formatTime, diffHours }

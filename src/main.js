@@ -121,21 +121,37 @@ function renderResults(city, dateStr, data, moon) {
   const tbody = document.querySelector('#times-table tbody')
   tbody.innerHTML = data.rows
     .map(
-      (row) => `
+      (row) => {
+        const azimuthCell = row.azimuth
+          ? `<td class="table__azimuth"><span class="azimuth__dir">${row.azimuth.direction}</span><span class="azimuth__deg">${row.azimuth.degrees}°</span></td>`
+          : `<td class="table__azimuth table__azimuth--empty">—</td>`
+        return `
     <tr class="table__row table__row--${row.phase}">
       <td>${row.label}</td>
       <td class="table__time">${row.timeStr}</td>
+      ${azimuthCell}
       <td class="table__desc">${row.desc}</td>
     </tr>`
+      }
     )
     .join('')
 
   const nightSummary = document.getElementById('night-summary')
   const level = data.summary.nightHours >= 3 ? '适合深空观测' : data.summary.nightHours > 0 ? '观测窗口较短' : '无完整天文黑夜'
+  const sunriseAz = data.summary.sunriseAzimuth
+  const sunsetAz = data.summary.sunsetAzimuth
+  const sunriseAzStr = sunriseAz
+    ? `<span class="azimuth__dir">${sunriseAz.direction}</span> <span class="azimuth__deg">${sunriseAz.degrees}°</span>`
+    : '—'
+  const sunsetAzStr = sunsetAz
+    ? `<span class="azimuth__dir">${sunsetAz.direction}</span> <span class="azimuth__deg">${sunsetAz.degrees}°</span>`
+    : '—'
   nightSummary.innerHTML = `
     <h3>观测评估</h3>
     <p class="night-summary__main">${level}</p>
     <ul class="night-summary__list">
+      <li>日出方位：<strong>${sunriseAzStr}</strong></li>
+      <li>日落方位：<strong>${sunsetAzStr}</strong></li>
       <li>民用暮光结束（暮）：<strong>${formatTime(data.times.dusk)}</strong></li>
       <li>天文暮光开始（暮）：<strong>${formatTime(data.times.nauticalDusk)}</strong></li>
       <li>天文暮光结束（暮）：<strong>${formatTime(data.times.night)}</strong></li>
