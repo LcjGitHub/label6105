@@ -7,17 +7,17 @@ export const CITIES = [
   { id: 'urumqi', name: '乌鲁木齐', lat: 43.8256, lng: 87.6168, timezone: 'Asia/Urumqi' },
   { id: 'lhasa', name: '拉萨', lat: 29.652, lng: 91.172, timezone: 'Asia/Shanghai' },
   { id: 'mohe', name: '漠河', lat: 52.9721, lng: 122.5379, timezone: 'Asia/Shanghai' },
-  { id: 'sanya', name: '三亚', lat: 18.2528, lng: 109.5119, timezone: 'Asia/Shanghai' },
+  { id: 'sanya', name: '三亚', lat: 18.2528, lng: 109.5119, timezone: 'Asia/Shanghai' }
 ]
 
 export const DEFAULT_CITY_ID = 'beijing'
 
 export function getCityById(id) {
-  return CITIES.find((c) => c.id === id) ?? CITIES[0]
+  return CITIES.find(c => c.id === id) ?? CITIES[0]
 }
 
 export function populateCitySelect(selectEl, selectedId = DEFAULT_CITY_ID) {
   selectEl.innerHTML = CITIES.map(
-    (c) => `<option value="${c.id}" ${c.id === selectedId ? 'selected' : ''}>${c.name}</option>`
+    c => `<option value="${c.id}" ${c.id === selectedId ? 'selected' : ''}>${c.name}</option>`
   ).join('')
 }

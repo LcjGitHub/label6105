@@ -1,8 +1,4 @@
-import {
-  DEFAULT_CITY_ID,
-  getCityById,
-  populateCitySelect,
-} from './cities.js'
+import { DEFAULT_CITY_ID, getCityById, populateCitySelect } from './cities.js'
 import {
   computeTwilightTimes,
   computeMonthCalendar,
@@ -10,21 +6,21 @@ import {
   getMinutesOfDay,
   computeObservationScore,
   generateObservingSuggestions,
-  compareMoonPhases,
+  compareMoonPhases
 } from './astro.js'
 
 // ── Navigation ──
 const navBtns = document.querySelectorAll('.nav__btn')
 const pages = document.querySelectorAll('.page')
 
-navBtns.forEach((btn) => {
+navBtns.forEach(btn => {
   btn.addEventListener('click', () => {
     const page = btn.dataset.page
-    navBtns.forEach((b) => {
+    navBtns.forEach(b => {
       b.classList.toggle('nav__btn--active', b === btn)
       b.setAttribute('aria-selected', b === btn ? 'true' : 'false')
     })
-    pages.forEach((p) => {
+    pages.forEach(p => {
       p.classList.toggle('page--active', p.id === `page-${page}`)
     })
     console.log(`当前页面：${PAGE_NAMES[page]}`)
@@ -34,12 +30,12 @@ navBtns.forEach((btn) => {
 const PAGE_NAMES = {
   calc: '暮光计算',
   compare: '日期对比',
-  calendar: '观测日历',
+  calendar: '观测日历'
 }
 
 const SHORTCUT_MAP = { 1: 'calc', 2: 'compare', 3: 'calendar' }
 
-navBtns.forEach((btn) => {
+navBtns.forEach(btn => {
   const page = btn.dataset.page
   const key = Object.entries(SHORTCUT_MAP).find(([, v]) => v === page)
   if (key) {
@@ -57,13 +53,14 @@ function switchToPage(pageKey) {
   btn.click()
 }
 
-document.addEventListener('keydown', (e) => {
+document.addEventListener('keydown', e => {
   if (!e.ctrlKey && !e.metaKey) return
   const num = parseInt(e.key, 10)
   if (num < 1 || num > 3) return
   const el = document.activeElement
   const tag = el ? el.tagName : ''
-  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (el && el.isContentEditable)) return
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (el && el.isContentEditable))
+    return
   e.preventDefault()
   switchToPage(SHORTCUT_MAP[num])
 })
@@ -162,7 +159,7 @@ function getScoreData(lat, dateStr, data, moon) {
     nightStart: data.summary.nightStart,
     nightEnd: data.summary.nightEnd,
     moonrise: moon.moonrise,
-    moonset: moon.moonset,
+    moonset: moon.moonset
   })
 }
 
@@ -189,7 +186,7 @@ cityPreset.addEventListener('change', () => applyCity(cityPreset.value))
 
 function buildTimelineSegments(times, goldenHours, blueHours) {
   const TOTAL_MIN = 24 * 60
-  const m = (d) => d == null ? null : getMinutesOfDay(d)
+  const m = d => (d == null ? null : getMinutesOfDay(d))
 
   const segments = []
   const addSeg = (startMin, endMin, className, label, subLabel = '') => {
@@ -200,7 +197,7 @@ function buildTimelineSegments(times, goldenHours, blueHours) {
       width,
       className,
       label,
-      subLabel,
+      subLabel
     })
   }
 
@@ -245,23 +242,30 @@ function buildTimelineMarkers(keyTimes, times, goldenHours, blueHours) {
     { label: '天文晨光结束', time: times.nightEnd, key: 'nightEnd' },
     { label: '航海晨光结束', time: times.nauticalDawn, key: 'nauticalDawn' },
     { label: '晨蓝调开始', time: blueHours.morning.start, key: 'blueMorningStart', custom: true },
-    { label: '晨黄金开始', time: goldenHours.morning.start, key: 'goldenMorningStart', custom: true },
+    {
+      label: '晨黄金开始',
+      time: goldenHours.morning.start,
+      key: 'goldenMorningStart',
+      custom: true
+    }
   ]
-  const eveningMarkers = keyTimes.filter((k) =>
-    ['dusk', 'nauticalDusk', 'night'].includes(k.key),
-  )
+  const eveningMarkers = keyTimes.filter(k => ['dusk', 'nauticalDusk', 'night'].includes(k.key))
   return { morningMarkers, eveningMarkers }
 }
 
 function renderTimelineBar(segments) {
   return `
     <div class="timeline__bar">
-      ${segments.map((s) => `
+      ${segments
+        .map(
+          s => `
         <div class="timeline__segment ${s.className}" style="left:${s.left.toFixed(2)}%;width:${s.width.toFixed(2)}%">
           <span class="segment-label">${s.label}</span>
           ${s.subLabel ? `<span class="segment-sub">${s.subLabel}</span>` : ''}
         </div>
-      `).join('')}
+      `
+        )
+        .join('')}
     </div>
   `
 }
@@ -297,7 +301,7 @@ function renderMarkerGroup(title, markers, isMorning = false) {
       <div class="timeline__markers${isMorning ? ' timeline__markers--morning' : ''}">
         ${markers
           .map(
-            (ev) => `
+            ev => `
           <div class="timeline__marker">
             <span class="timeline__dot${isMorning ? ' timeline__dot--blue' : ''}"></span>
             <span class="timeline__label">${ev.label}</span>
@@ -325,7 +329,12 @@ function renderTimeline(keyTimes, summary, times, options = {}) {
   if (!timeline) return
   const { goldenHours, blueHours } = summary
   const segments = buildTimelineSegments(times, goldenHours, blueHours)
-  const { morningMarkers, eveningMarkers } = buildTimelineMarkers(keyTimes, times, goldenHours, blueHours)
+  const { morningMarkers, eveningMarkers } = buildTimelineMarkers(
+    keyTimes,
+    times,
+    goldenHours,
+    blueHours
+  )
 
   const morningTitle = compact ? '早晨关键节点' : '早晨暮光关键节点'
   const eveningTitle = compact ? '傍晚关键节点' : '傍晚暮光关键节点'
@@ -333,7 +342,11 @@ function renderTimeline(keyTimes, summary, times, options = {}) {
   timeline.innerHTML = `
     ${renderTimelineBar(segments)}
     ${renderPhotoPeriods(goldenHours, blueHours, compact)}
-    ${renderMarkerGroup(morningTitle, morningMarkers.filter((m) => m.time), true)}
+    ${renderMarkerGroup(
+      morningTitle,
+      morningMarkers.filter(m => m.time),
+      true
+    )}
     ${renderMarkerGroup(eveningTitle, eveningMarkers)}
     ${renderTimelineNight(summary)}
   `
@@ -368,7 +381,7 @@ function renderScoreCard(lat, dateStr, data, moon, city, targetId = 'score-card'
     nightStart: data.summary.nightStart,
     nightEnd: data.summary.nightEnd,
     moonrise: moon.moonrise,
-    moonset: moon.moonset,
+    moonset: moon.moonset
   })
 
   const suggestions = generateObservingSuggestions(scoreData, moon.phase.name)
@@ -383,15 +396,16 @@ function renderScoreCard(lat, dateStr, data, moon, city, targetId = 'score-card'
       breakdown,
       data,
       moon,
-      lat,
+      lat
     }
   }
 
-  const shareBtn = targetId === 'score-card'
-    ? `<button type="button" class="share-btn" id="btn-share-result">
+  const shareBtn =
+    targetId === 'score-card'
+      ? `<button type="button" class="share-btn" id="btn-share-result">
         <span>📤</span><span>分享此结果</span>
       </button>`
-    : ''
+      : ''
 
   scoreEl.innerHTML = `
     <div class="score-card score-level--${level.class}">
@@ -406,7 +420,7 @@ function renderScoreCard(lat, dateStr, data, moon, city, targetId = 'score-card'
           <div class="breakdown-item">
             <span class="breakdown-label">黑夜时长</span>
             <div class="breakdown-bar">
-              <div class="breakdown-progress progress-night" style="width: ${(breakdown.nightHours.score / breakdown.nightHours.max * 100).toFixed(0)}%"></div>
+              <div class="breakdown-progress progress-night" style="width: ${((breakdown.nightHours.score / breakdown.nightHours.max) * 100).toFixed(0)}%"></div>
             </div>
             <span class="breakdown-score">${breakdown.nightHours.score}/${breakdown.nightHours.max}</span>
             <div class="breakdown-detail">${breakdown.nightHours.detail}</div>
@@ -414,7 +428,7 @@ function renderScoreCard(lat, dateStr, data, moon, city, targetId = 'score-card'
           <div class="breakdown-item">
             <span class="breakdown-label">月相条件</span>
             <div class="breakdown-bar">
-              <div class="breakdown-progress progress-moon" style="width: ${(breakdown.moon.score / breakdown.moon.max * 100).toFixed(0)}%"></div>
+              <div class="breakdown-progress progress-moon" style="width: ${((breakdown.moon.score / breakdown.moon.max) * 100).toFixed(0)}%"></div>
             </div>
             <span class="breakdown-score">${breakdown.moon.score}/${breakdown.moon.max}</span>
             <div class="breakdown-detail">${breakdown.moon.detail}（照度 ${breakdown.moon.illumination}）</div>
@@ -422,7 +436,7 @@ function renderScoreCard(lat, dateStr, data, moon, city, targetId = 'score-card'
           <div class="breakdown-item">
             <span class="breakdown-label">季节因素</span>
             <div class="breakdown-bar">
-              <div class="breakdown-progress progress-season" style="width: ${(breakdown.season.score / breakdown.season.max * 100).toFixed(0)}%"></div>
+              <div class="breakdown-progress progress-season" style="width: ${((breakdown.season.score / breakdown.season.max) * 100).toFixed(0)}%"></div>
             </div>
             <span class="breakdown-score">${breakdown.season.score}/${breakdown.season.max}</span>
             <div class="breakdown-detail">${breakdown.season.detail}</div>
@@ -431,11 +445,11 @@ function renderScoreCard(lat, dateStr, data, moon, city, targetId = 'score-card'
         <div class="suggestions-section">
           <div class="suggestions-title">🌟 适合观测项目</div>
           <div class="suitable-list">
-            ${suggestions.suitable.map((s) => `<span class="suitable-tag">${s}</span>`).join('')}
+            ${suggestions.suitable.map(s => `<span class="suitable-tag">${s}</span>`).join('')}
           </div>
           <div class="suggestions-title">💡 观测建议</div>
           <ul class="tips-list">
-            ${suggestions.tips.map((t) => `<li>${t}</li>`).join('')}
+            ${suggestions.tips.map(t => `<li>${t}</li>`).join('')}
           </ul>
         </div>
       </div>
@@ -444,7 +458,8 @@ function renderScoreCard(lat, dateStr, data, moon, city, targetId = 'score-card'
 }
 
 function updateResultHeader(city, dateStr) {
-  document.getElementById('result-location').textContent = `${city.name}（${city.lat}°N, ${city.lng}°E）`
+  document.getElementById('result-location').textContent =
+    `${city.name}（${city.lat}°N, ${city.lng}°E）`
   document.getElementById('result-date').textContent = dateStr
 }
 
@@ -459,7 +474,7 @@ function renderResults(city, dateStr, data, moon) {
   document.getElementById('score-card').scrollIntoView({ behavior: 'smooth', block: 'nearest' })
 }
 
-calcForm.addEventListener('submit', (e) => {
+calcForm.addEventListener('submit', e => {
   e.preventDefault()
   const city = getCityById(cityPreset.value)
   const lat = parseFloat(latInput.value)
@@ -492,13 +507,13 @@ function renderCalendar(city, year, month, days) {
   document.getElementById('cal-title').textContent = `${city.name} · ${year} 年 ${month} 月`
 
   const firstWeekday = new Date(year, month - 1, 1).getDay()
-  let html = WEEKDAYS.map((w) => `<div class="calendar__weekday">${w}</div>`).join('')
+  let html = WEEKDAYS.map(w => `<div class="calendar__weekday">${w}</div>`).join('')
 
   for (let i = 0; i < firstWeekday; i++) {
     html += '<div class="calendar__cell calendar__cell--empty"></div>'
   }
 
-  days.forEach((d) => {
+  days.forEach(d => {
     const scoreStr = d.score != null ? `${d.score}` : '—'
     const dayOfWeek = new Date(year, month - 1, d.day).getDay()
     const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
@@ -517,7 +532,7 @@ function renderCalendar(city, year, month, days) {
   calendarWrap.hidden = false
 }
 
-calendarForm.addEventListener('submit', (e) => {
+calendarForm.addEventListener('submit', e => {
   e.preventDefault()
   const city = getCityById(calCity.value)
   const [year, month] = calMonth.value.split('-').map(Number)
@@ -566,9 +581,10 @@ function renderCompareTimeline(timelineId, keyTimes, summary, times) {
 function renderTableRow(row, options = {}) {
   const { withCopyButton = false, withColspanDesc = false } = options
   const rowClass = getTableRowClass(row)
-  const descCell = withColspanDesc && !row.isPeriod
-    ? `<td class="table__desc" colspan="2">${row.desc}</td>`
-    : `<td class="table__desc">${row.desc}</td>`
+  const descCell =
+    withColspanDesc && !row.isPeriod
+      ? `<td class="table__desc" colspan="2">${row.desc}</td>`
+      : `<td class="table__desc">${row.desc}</td>`
   const copyCell = withCopyButton ? buildCopyButton(row) : ''
   return `
     <tr class="table__row ${rowClass}">
@@ -584,7 +600,7 @@ function renderTimesTable(tableId, rows, options = {}) {
   const selector = tableId.startsWith('#') ? tableId : `#${tableId}`
   const tbody = document.querySelector(`${selector} tbody`)
   if (!tbody) return
-  tbody.innerHTML = rows.map((row) => renderTableRow(row, options)).join('')
+  tbody.innerHTML = rows.map(row => renderTableRow(row, options)).join('')
 }
 
 function renderCompareSummary(summaryId, data, lat, dateStr, moon) {
@@ -600,7 +616,7 @@ function renderPhotoCards(goldenHours, blueHours, compact = false) {
         '日出后一小时，暖金色光线',
         '民用晨光期间，冷蓝色调',
         '日落前一小时，暖金色光线',
-        '民用暮光期间，冷蓝色调',
+        '民用暮光期间，冷蓝色调'
       ]
   return `
     <div class="${gridClass}">
@@ -661,7 +677,8 @@ function renderNightSummary(targetId, data, lat, dateStr, moon, options = {}) {
 }
 
 function diffMinutes(timeA, timeB) {
-  if (!timeA || !timeB || Number.isNaN(timeA.getTime()) || Number.isNaN(timeB.getTime())) return null
+  if (!timeA || !timeB || Number.isNaN(timeA.getTime()) || Number.isNaN(timeB.getTime()))
+    return null
   const minsA = timeA.getHours() * 60 + timeA.getMinutes()
   const minsB = timeB.getHours() * 60 + timeB.getMinutes()
   return minsB - minsA
@@ -699,7 +716,7 @@ function renderDiffTable(dataA, dataB) {
     { key: 'blueHourEvening', label: '暮蓝调时刻（开始）', period: 'blue', type: 'start' },
     { key: 'dusk', label: '民用暮光结束' },
     { key: 'nauticalDusk', label: '航海暮光结束' },
-    { key: 'night', label: '天文黑夜开始' },
+    { key: 'night', label: '天文黑夜开始' }
   ]
 
   const getTimeFor = (data, entry) => {
@@ -712,7 +729,7 @@ function renderDiffTable(dataA, dataB) {
   }
 
   tbody.innerHTML = compareKeys
-    .map((entry) => {
+    .map(entry => {
       const timeA = getTimeFor(dataA, entry)
       const timeB = getTimeFor(dataB, entry)
       const diff = diffMinutes(timeA, timeB)
@@ -738,7 +755,8 @@ function renderCompareSummaryDiff(dataA, dataB, moonA, moonB) {
   const moonDiff = compareMoonPhases(moonA, moonB)
 
   function getHoursBadge(diff) {
-    if (Math.abs(diff) < 0.05) return '<span class="compare-summary-diff__badge badge--same">相同</span>'
+    if (Math.abs(diff) < 0.05)
+      return '<span class="compare-summary-diff__badge badge--same">相同</span>'
     if (diff > 0) return '<span class="compare-summary-diff__badge badge--better">B 更长</span>'
     return '<span class="compare-summary-diff__badge badge--worse">B 更短</span>'
   }
@@ -758,8 +776,10 @@ function renderCompareSummaryDiff(dataA, dataB, moonA, moonB) {
   }
 
   function getMoonBadge(trendClass) {
-    if (trendClass === 'same') return '<span class="compare-summary-diff__badge badge--same">相近</span>'
-    if (trendClass === 'better') return '<span class="compare-summary-diff__badge badge--better">B 更暗</span>'
+    if (trendClass === 'same')
+      return '<span class="compare-summary-diff__badge badge--same">相近</span>'
+    if (trendClass === 'better')
+      return '<span class="compare-summary-diff__badge badge--better">B 更暗</span>'
     return '<span class="compare-summary-diff__badge badge--worse">B 更亮</span>'
   }
 
@@ -801,7 +821,8 @@ function renderCompareSummaryDiff(dataA, dataB, moonA, moonB) {
 }
 
 function updateCompareHeader(city, dateStrA, dateStrB) {
-  document.getElementById('compare-location').textContent = `${city.name}（${city.lat}°N, ${city.lng}°E）`
+  document.getElementById('compare-location').textContent =
+    `${city.name}（${city.lat}°N, ${city.lng}°E）`
   document.getElementById('compare-title-a').textContent = `日期 A · ${dateStrA}`
   document.getElementById('compare-title-b').textContent = `日期 B · ${dateStrB}`
 }
@@ -822,7 +843,7 @@ function renderCompareResults(city, dateStrA, dateStrB, dataA, dataB, moonA, moo
   compareResults.hidden = false
 }
 
-compareForm.addEventListener('submit', (e) => {
+compareForm.addEventListener('submit', e => {
   e.preventDefault()
   const city = getCityById(compareCity.value)
   const dateStrA = compareDateA.value
@@ -847,7 +868,7 @@ document.querySelector('[data-page="compare"]').addEventListener('click', () => 
 })
 
 // ── Copy Button Event Delegation ──
-document.addEventListener('click', (e) => {
+document.addEventListener('click', e => {
   const btn = e.target.closest('.copy-btn')
   if (!btn) return
   const encoded = btn.getAttribute('data-copy')
@@ -863,7 +884,7 @@ function getLevelColors(levelClass) {
     good: { main: '#8be9fd', glow: 'rgba(139, 233, 253, 0.35)', label: '良好' },
     fair: { main: '#f1fa8c', glow: 'rgba(241, 250, 140, 0.35)', label: '一般' },
     poor: { main: '#ffb86c', glow: 'rgba(255, 184, 108, 0.35)', label: '较差' },
-    verypoor: { main: '#6272a4', glow: 'rgba(98, 114, 164, 0.35)', label: '不适宜' },
+    verypoor: { main: '#6272a4', glow: 'rgba(98, 114, 164, 0.35)', label: '不适宜' }
   }
   return map[levelClass] || map.fair
 }
@@ -1010,10 +1031,10 @@ function drawShareCanvas(shareData) {
   const breakdownItems = [
     { label: '黑夜时长', data: breakdown.nightHours, colors: ['#6272a4', '#8be9fd'] },
     { label: '月相条件', data: breakdown.moon, colors: ['#bd93f9', '#ff79c6'] },
-    { label: '季节因素', data: breakdown.season, colors: ['#50fa7b', '#f1fa8c'] },
+    { label: '季节因素', data: breakdown.season, colors: ['#50fa7b', '#f1fa8c'] }
   ]
 
-  breakdownItems.forEach((item) => {
+  breakdownItems.forEach(item => {
     ctx.save()
     ctx.font = '15px "Noto Sans SC", sans-serif'
     ctx.fillStyle = '#8899b0'
@@ -1074,15 +1095,19 @@ function drawShareCanvas(shareData) {
   ctx.stroke()
 
   const TOTAL_MIN = 24 * 60
-  const m = (d) => d == null ? null : getMinutesOfDay(d)
-  const segments = buildTimelineSegments(data.times, data.summary.goldenHours, data.summary.blueHours)
+  const m = d => (d == null ? null : getMinutesOfDay(d))
+  const segments = buildTimelineSegments(
+    data.times,
+    data.summary.goldenHours,
+    data.summary.blueHours
+  )
 
   ctx.save()
   ctx.beginPath()
   roundRect(ctx, tSegX, tSegY, tSegW, tSegH, 10)
   ctx.clip()
 
-  segments.forEach((seg) => {
+  segments.forEach(seg => {
     const sx = tSegX + (seg.left / 100) * tSegW
     const sw = (seg.width / 100) * tSegW
     if (sw < 0.5) return
@@ -1094,7 +1119,7 @@ function drawShareCanvas(shareData) {
       'timeline__segment--civil': ['#ffb86c', '#ffb86c'],
       'timeline__segment--nautical': ['#bd93f9', '#bd93f9'],
       'timeline__segment--astro': ['#6272a4', '#6272a4'],
-      'timeline__segment--night': ['#0f1525', '#0f1525'],
+      'timeline__segment--night': ['#0f1525', '#0f1525']
     }
     const colors = colorMap[seg.className] || ['#6272a4', '#6272a4']
 
@@ -1152,8 +1177,16 @@ function drawShareCanvas(shareData) {
 
   ctx.font = '13px "JetBrains Mono", monospace'
   ctx.fillStyle = '#e8edf5'
-  ctx.fillText(`晨间：${blueHours.morning.startStr} → ${blueHours.morning.endStr}`, card2X + 20, y + 58)
-  ctx.fillText(`傍晚：${blueHours.evening.startStr} → ${blueHours.evening.endStr}`, card2X + 20, y + 82)
+  ctx.fillText(
+    `晨间：${blueHours.morning.startStr} → ${blueHours.morning.endStr}`,
+    card2X + 20,
+    y + 58
+  )
+  ctx.fillText(
+    `傍晚：${blueHours.evening.startStr} → ${blueHours.evening.endStr}`,
+    card2X + 20,
+    y + 82
+  )
   ctx.restore()
 
   y += 124
@@ -1180,7 +1213,11 @@ function drawShareCanvas(shareData) {
   ctx.font = '13px "JetBrains Mono", monospace'
   ctx.fillStyle = '#e8edf5'
   ctx.textAlign = 'right'
-  ctx.fillText(`照度 ${moon.illumination}    月出 ${moon.moonriseStr}    月落 ${moon.moonsetStr}`, W - 60, y + 48)
+  ctx.fillText(
+    `照度 ${moon.illumination}    月出 ${moon.moonriseStr}    月落 ${moon.moonsetStr}`,
+    W - 60,
+    y + 48
+  )
   ctx.textAlign = 'left'
   ctx.restore()
 
@@ -1190,7 +1227,11 @@ function drawShareCanvas(shareData) {
   ctx.font = '13px "JetBrains Mono", monospace'
   ctx.fillStyle = '#6272a4'
   ctx.textAlign = 'center'
-  ctx.fillText(`天文黑夜：${formatTime(data.summary.nightStart)} → 次日 ${formatTime(data.summary.nightEnd)}（${formatNightHours(data.summary.nightHours)}）`, W / 2, y)
+  ctx.fillText(
+    `天文黑夜：${formatTime(data.summary.nightStart)} → 次日 ${formatTime(data.summary.nightEnd)}（${formatNightHours(data.summary.nightHours)}）`,
+    W / 2,
+    y
+  )
   ctx.restore()
 
   y += 34
@@ -1271,7 +1312,7 @@ async function copyShareImage() {
 
   try {
     const blob = await new Promise((resolve, reject) => {
-      canvas.toBlob((b) => {
+      canvas.toBlob(b => {
         if (b) resolve(b)
         else reject(new Error('生成图片失败'))
       }, 'image/png')
@@ -1284,7 +1325,7 @@ async function copyShareImage() {
   }
 }
 
-document.addEventListener('click', (e) => {
+document.addEventListener('click', e => {
   if (e.target.closest('#btn-share-result')) {
     openShareModal()
     return
@@ -1306,7 +1347,7 @@ document.addEventListener('click', (e) => {
   }
 })
 
-document.addEventListener('keydown', (e) => {
+document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
     const modal = document.getElementById('share-modal')
     if (modal && !modal.hidden) closeShareModal()

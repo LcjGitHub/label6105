@@ -4,14 +4,14 @@ import SunCalc from 'suncalc'
 export const TWILIGHT = {
   civil: -6,
   nautical: -12,
-  astronomical: -18,
+  astronomical: -18
 }
 
 /** 摄影师时段定义 */
 export const PHOTOGRAPHY_PERIODS = {
   goldenHourDuration: 60,
   blueHourMorning: { startKey: 'dawn', endKey: 'sunrise', label: '晨蓝调时刻' },
-  blueHourEvening: { startKey: 'sunset', endKey: 'dusk', label: '暮蓝调时刻' },
+  blueHourEvening: { startKey: 'sunset', endKey: 'dusk', label: '暮蓝调时刻' }
 }
 
 /**
@@ -22,13 +22,23 @@ export const TIME_EVENTS = [
   { key: 'sunrise', label: '日出', desc: '太阳上边缘出现地平线', phase: 'morning' },
   { key: 'sunriseEnd', label: '日出结束', desc: '太阳完全离开地平线', phase: 'morning' },
   { key: 'dawn', label: '民用晨光结束', desc: '太阳升至 −6°，民用晨光结束', phase: 'morning' },
-  { key: 'nauticalDawn', label: '航海晨光结束', desc: '太阳升至 −12°，航海晨光结束', phase: 'morning' },
+  {
+    key: 'nauticalDawn',
+    label: '航海晨光结束',
+    desc: '太阳升至 −12°，航海晨光结束',
+    phase: 'morning'
+  },
   { key: 'nightEnd', label: '天文晨光结束', desc: '太阳升至 −18°，天文黑夜结束', phase: 'morning' },
   { key: 'sunset', label: '日落', desc: '太阳完全落入地平线', phase: 'evening' },
   { key: 'sunsetStart', label: '日落开始', desc: '太阳上边缘触及地平线', phase: 'evening' },
   { key: 'dusk', label: '民用暮光结束', desc: '太阳降至 −6°，民用暮光结束', phase: 'evening' },
-  { key: 'nauticalDusk', label: '航海暮光结束', desc: '太阳降至 −12°，航海暮光结束', phase: 'evening' },
-  { key: 'night', label: '天文暮光结束', desc: '太阳降至 −18°，天文黑夜开始', phase: 'evening' },
+  {
+    key: 'nauticalDusk',
+    label: '航海暮光结束',
+    desc: '太阳降至 −12°，航海暮光结束',
+    phase: 'evening'
+  },
+  { key: 'night', label: '天文暮光结束', desc: '太阳降至 −18°，天文黑夜开始', phase: 'evening' }
 ]
 
 /** 用户关心的核心时段（单独展示） */
@@ -36,7 +46,7 @@ export const KEY_EVENTS = [
   { key: 'dusk', label: '民用暮光结束', note: '太阳高度 −6°' },
   { key: 'nauticalDusk', label: '天文暮光开始', note: '航海暮光结束，太阳 −12°' },
   { key: 'night', label: '天文暮光结束', note: '天文黑夜开始，太阳 −18°' },
-  { key: 'nightEnd', label: '天文晨光结束', note: '天文黑夜结束（次日晨）' },
+  { key: 'nightEnd', label: '天文晨光结束', note: '天文黑夜结束（次日晨）' }
 ]
 
 function parseLocalDate(dateStr) {
@@ -75,7 +85,7 @@ export function computeGoldenHours(times) {
       startStr: formatTime(morningStart),
       endStr: formatTime(morningEnd),
       label: '晨黄金时刻',
-      durationHours: diffHours(morningStart, morningEnd),
+      durationHours: diffHours(morningStart, morningEnd)
     },
     evening: {
       start: eveningStart,
@@ -83,8 +93,8 @@ export function computeGoldenHours(times) {
       startStr: formatTime(eveningStart),
       endStr: formatTime(eveningEnd),
       label: '暮黄金时刻',
-      durationHours: diffHours(eveningStart, eveningEnd),
-    },
+      durationHours: diffHours(eveningStart, eveningEnd)
+    }
   }
 }
 
@@ -101,7 +111,7 @@ export function computeBlueHours(times) {
       startStr: formatTime(morningStart),
       endStr: formatTime(morningEnd),
       label: '晨蓝调时刻',
-      durationHours: diffHours(morningStart, morningEnd),
+      durationHours: diffHours(morningStart, morningEnd)
     },
     evening: {
       start: eveningStart,
@@ -109,8 +119,8 @@ export function computeBlueHours(times) {
       startStr: formatTime(eveningStart),
       endStr: formatTime(eveningEnd),
       label: '暮蓝调时刻',
-      durationHours: diffHours(eveningStart, eveningEnd),
-    },
+      durationHours: diffHours(eveningStart, eveningEnd)
+    }
   }
 }
 
@@ -130,7 +140,7 @@ export function getPhotographyRows(goldenHours, blueHours) {
       timeStr: `${blueHours.morning.startStr} → ${blueHours.morning.endStr}`,
       azimuth: null,
       isPeriod: true,
-      periodType: 'blue',
+      periodType: 'blue'
     },
     {
       key: 'goldenHourMorning',
@@ -141,7 +151,7 @@ export function getPhotographyRows(goldenHours, blueHours) {
       timeStr: `${goldenHours.morning.startStr} → ${goldenHours.morning.endStr}`,
       azimuth: null,
       isPeriod: true,
-      periodType: 'golden',
+      periodType: 'golden'
     },
     {
       key: 'goldenHourEvening',
@@ -152,7 +162,7 @@ export function getPhotographyRows(goldenHours, blueHours) {
       timeStr: `${goldenHours.evening.startStr} → ${goldenHours.evening.endStr}`,
       azimuth: null,
       isPeriod: true,
-      periodType: 'golden',
+      periodType: 'golden'
     },
     {
       key: 'blueHourEvening',
@@ -163,8 +173,8 @@ export function getPhotographyRows(goldenHours, blueHours) {
       timeStr: `${blueHours.evening.startStr} → ${blueHours.evening.endStr}`,
       azimuth: null,
       isPeriod: true,
-      periodType: 'blue',
-    },
+      periodType: 'blue'
+    }
   ]
 }
 
@@ -179,11 +189,11 @@ export function computeTwilightTimes(lat, lng, dateStr) {
   const blueHours = computeBlueHours(times)
   const photographyRows = getPhotographyRows(goldenHours, blueHours)
 
-  const rows = TIME_EVENTS.map((ev) => ({
+  const rows = TIME_EVENTS.map(ev => ({
     ...ev,
     time: times[ev.key],
     timeStr: formatTime(times[ev.key]),
-    azimuth: azimuths[ev.key] || null,
+    azimuth: azimuths[ev.key] || null
   }))
 
   const allRows = [...photographyRows, ...rows]
@@ -204,10 +214,10 @@ export function computeTwilightTimes(lat, lng, dateStr) {
     azimuths,
     goldenHours,
     blueHours,
-    keyTimes: KEY_EVENTS.map((ev) => ({
+    keyTimes: KEY_EVENTS.map(ev => ({
       ...ev,
       time: times[ev.key],
-      timeStr: formatTime(times[ev.key]),
+      timeStr: formatTime(times[ev.key])
     })),
     summary: {
       nightStart,
@@ -219,8 +229,8 @@ export function computeTwilightTimes(lat, lng, dateStr) {
       sunriseAzimuth: azimuths.sunrise,
       sunsetStartAzimuth: azimuths.sunsetStart,
       goldenHours,
-      blueHours,
-    },
+      blueHours
+    }
   }
 }
 
@@ -229,7 +239,7 @@ export const OBS_LEVELS = {
   excellent: { minHours: 5, label: '极佳', class: 'excellent' },
   good: { minHours: 3, label: '良好', class: 'good' },
   fair: { minHours: 1, label: '一般', class: 'fair' },
-  poor: { minHours: 0, label: '不适宜', class: 'poor' },
+  poor: { minHours: 0, label: '不适宜', class: 'poor' }
 }
 
 export function getObservationLevel(nightHours) {
@@ -261,7 +271,7 @@ export function computeMonthCalendar(lat, lng, year, month) {
       nightStart: times.night,
       nightEnd: times.nightEnd,
       moonrise: moonTimes.rise,
-      moonset: moonTimes.set,
+      moonset: moonTimes.set
     })
 
     days.push({
@@ -274,7 +284,7 @@ export function computeMonthCalendar(lat, lng, year, month) {
       level: scoreData.level,
       score: scoreData.total,
       nightStartStr: formatTime(times.night),
-      nightEndStr: formatTime(times.nightEnd),
+      nightEndStr: formatTime(times.nightEnd)
     })
   }
 
@@ -284,19 +294,55 @@ export function computeMonthCalendar(lat, lng, year, month) {
 const SYNODIC_MONTH = 29.53058867
 
 const MOON_PHASES = [
-  { min: 0, max: 0.0334, name: '新月', emoji: '🌑', desc: '月亮位于太阳与地球之间，以暗面朝向地球' },
-  { min: 0.0334, max: 0.2166, name: '娥眉月', emoji: '🌒', desc: '月亮逐渐露出一丝银钩，日落后出现在西方天空' },
-  { min: 0.2166, max: 0.2834, name: '上弦月', emoji: '🌓', desc: '月亮呈现右半边明亮，中午升起、半夜落下' },
+  {
+    min: 0,
+    max: 0.0334,
+    name: '新月',
+    emoji: '🌑',
+    desc: '月亮位于太阳与地球之间，以暗面朝向地球'
+  },
+  {
+    min: 0.0334,
+    max: 0.2166,
+    name: '娥眉月',
+    emoji: '🌒',
+    desc: '月亮逐渐露出一丝银钩，日落后出现在西方天空'
+  },
+  {
+    min: 0.2166,
+    max: 0.2834,
+    name: '上弦月',
+    emoji: '🌓',
+    desc: '月亮呈现右半边明亮，中午升起、半夜落下'
+  },
   { min: 0.2834, max: 0.4666, name: '盈凸月', emoji: '🌔', desc: '月亮大部分明亮，亮度逐日增加' },
   { min: 0.4666, max: 0.5334, name: '满月', emoji: '🌕', desc: '月亮整个圆面都被照亮，整夜可见' },
   { min: 0.5334, max: 0.7166, name: '亏凸月', emoji: '🌖', desc: '月亮大部分明亮，亮度逐日减少' },
-  { min: 0.7166, max: 0.7834, name: '下弦月', emoji: '🌗', desc: '月亮呈现左半边明亮，半夜升起、中午落下' },
-  { min: 0.7834, max: 0.9666, name: '残月', emoji: '🌘', desc: '月亮逐渐变成一丝银钩，黎明前出现在东方天空' },
-  { min: 0.9666, max: 1.0001, name: '新月', emoji: '🌑', desc: '月亮位于太阳与地球之间，以暗面朝向地球' },
+  {
+    min: 0.7166,
+    max: 0.7834,
+    name: '下弦月',
+    emoji: '🌗',
+    desc: '月亮呈现左半边明亮，半夜升起、中午落下'
+  },
+  {
+    min: 0.7834,
+    max: 0.9666,
+    name: '残月',
+    emoji: '🌘',
+    desc: '月亮逐渐变成一丝银钩，黎明前出现在东方天空'
+  },
+  {
+    min: 0.9666,
+    max: 1.0001,
+    name: '新月',
+    emoji: '🌑',
+    desc: '月亮位于太阳与地球之间，以暗面朝向地球'
+  }
 ]
 
 export function getMoonPhase(phaseValue) {
-  return MOON_PHASES.find((p) => phaseValue >= p.min && phaseValue < p.max) || MOON_PHASES[0]
+  return MOON_PHASES.find(p => phaseValue >= p.min && phaseValue < p.max) || MOON_PHASES[0]
 }
 
 export function getMoonAge(phaseValue) {
@@ -316,7 +362,7 @@ export function computeMoonInfo(lat, lng, dateStr) {
       name: phase.name,
       emoji: phase.emoji,
       desc: phase.desc,
-      value: illum.phase,
+      value: illum.phase
     },
     age,
     ageStr: `${age.toFixed(1)} 天`,
@@ -325,7 +371,7 @@ export function computeMoonInfo(lat, lng, dateStr) {
     moonrise: times.rise,
     moonset: times.set,
     moonriseStr: formatTime(times.rise, '未升起'),
-    moonsetStr: formatTime(times.set, '未落下'),
+    moonsetStr: formatTime(times.set, '未落下')
   }
 }
 
@@ -359,7 +405,7 @@ export function compareMoonPhases(moonA, moonB) {
     ageDiffStr: `${ageDiff > 0 ? '+' : ''}${ageDiff.toFixed(1)} 天`,
     trend,
     trendClass,
-    observationNote,
+    observationNote
   }
 }
 
@@ -380,7 +426,7 @@ const COMPASS_DIRECTIONS = [
   { min: 281.25, max: 303.75, label: '西偏北' },
   { min: 303.75, max: 326.25, label: '西北' },
   { min: 326.25, max: 348.75, label: '北偏西' },
-  { min: 348.75, max: 360, label: '正北' },
+  { min: 348.75, max: 360, label: '正北' }
 ]
 
 function sunAzimuthToCompassDegrees(azimuthRad) {
@@ -391,7 +437,7 @@ function sunAzimuthToCompassDegrees(azimuthRad) {
 }
 
 export function getCompassDirection(azimuthDeg) {
-  const dir = COMPASS_DIRECTIONS.find((d) => azimuthDeg >= d.min && azimuthDeg < d.max)
+  const dir = COMPASS_DIRECTIONS.find(d => azimuthDeg >= d.min && azimuthDeg < d.max)
   return dir ? dir.label : '—'
 }
 
@@ -401,7 +447,7 @@ export function computeSunAzimuth(lat, lng, date) {
   const degrees = sunAzimuthToCompassDegrees(pos.azimuth)
   return {
     degrees: Number(degrees.toFixed(1)),
-    direction: getCompassDirection(degrees),
+    direction: getCompassDirection(degrees)
   }
 }
 
@@ -426,7 +472,7 @@ export const SCORE_LEVELS = {
   good: { minScore: 70, label: '良好', class: 'good' },
   fair: { minScore: 55, label: '一般', class: 'fair' },
   poor: { minScore: 35, label: '较差', class: 'poor' },
-  veryPoor: { minScore: 0, label: '不适宜', class: 'verypoor' },
+  veryPoor: { minScore: 0, label: '不适宜', class: 'verypoor' }
 }
 
 export function getScoreLevel(score) {
@@ -474,7 +520,9 @@ function calcMoonScore(illuminationFraction, nightStart, nightEnd, moonrise, moo
     const nightStartMin = nightStart.getHours() * 60 + nightStart.getMinutes()
     const nightEndMin = nightEnd.getHours() * 60 + nightEnd.getMinutes() + 24 * 60
     const moonriseMin = moonrise ? moonrise.getHours() * 60 + moonrise.getMinutes() : null
-    const moonsetMin = moonset ? moonset.getHours() * 60 + moonset.getMinutes() + (moonset < nightStart ? 24 * 60 : 0) : null
+    const moonsetMin = moonset
+      ? moonset.getHours() * 60 + moonset.getMinutes() + (moonset < nightStart ? 24 * 60 : 0)
+      : null
 
     let overlapMin = 0
     const startMin = Math.max(nightStartMin, moonriseMin ?? nightStartMin)
@@ -497,7 +545,11 @@ function calcMoonScore(illuminationFraction, nightStart, nightEnd, moonrise, moo
   else if (illuminationFraction < 0.7) detail = '盈凸月/亏凸月，月光干扰较大'
   else detail = '满月附近，月光干扰严重'
 
-  return { score: Math.round(score), detail, illumination: `${(illuminationFraction * 100).toFixed(0)}%` }
+  return {
+    score: Math.round(score),
+    detail,
+    illumination: `${(illuminationFraction * 100).toFixed(0)}%`
+  }
 }
 
 function calcSeasonScore(lat, date) {
@@ -544,7 +596,8 @@ function calcSeasonScore(lat, date) {
 }
 
 export function computeObservationScore(params) {
-  const { nightHours, lat, dateStr, moonIllumination, nightStart, nightEnd, moonrise, moonset } = params
+  const { nightHours, lat, dateStr, moonIllumination, nightStart, nightEnd, moonrise, moonset } =
+    params
   const date = parseLocalDate(dateStr)
 
   const nightHoursResult = calcNightHoursScore(nightHours)
@@ -561,20 +614,20 @@ export function computeObservationScore(params) {
       nightHours: {
         score: nightHoursResult.score,
         max: 40,
-        detail: nightHoursResult.detail,
+        detail: nightHoursResult.detail
       },
       moon: {
         score: moonResult.score,
         max: 35,
         detail: moonResult.detail,
-        illumination: moonResult.illumination,
+        illumination: moonResult.illumination
       },
       season: {
         score: seasonResult.score,
         max: 25,
-        detail: seasonResult.detail,
-      },
-    },
+        detail: seasonResult.detail
+      }
+    }
   }
 }
 
@@ -582,7 +635,7 @@ export function generateObservingSuggestions(scoreData, moonPhase) {
   const { total, breakdown } = scoreData
   const suggestions = {
     suitable: [],
-    tips: [],
+    tips: []
   }
 
   if (total >= 85) {
