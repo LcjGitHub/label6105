@@ -8,6 +8,8 @@ import {
   computeMonthCalendar,
   computeMoonInfo,
   getMinutesOfDay,
+  computeObservationScore,
+  generateObservingSuggestions,
 } from './astro.js'
 
 // ── Navigation ──
@@ -213,11 +215,80 @@ function renderMoonInfo(moon) {
   document.getElementById('moon-set').textContent = moon.moonsetStr
 }
 
+function renderScoreCard(lat, dateStr, data, moon) {
+  const scoreEl = document.getElementById('score-card')
+  if (!scoreEl) return
+
+  const moonIllum = parseFloat(moon.illumination) / 100
+  const scoreData = computeObservationScore({
+    nightHours: data.summary.nightHours,
+    lat,
+    dateStr,
+    moonIllumination: moonIllum,
+    nightStart: data.summary.nightStart,
+    nightEnd: data.summary.nightEnd,
+    moonrise: moon.moonrise,
+    moonset: moon.moonset,
+  })
+
+  const suggestions = generateObservingSuggestions(scoreData, moon.phase.name)
+  const { total, level, breakdown } = scoreData
+
+  scoreEl.innerHTML = `
+    <div class="score-card ${level.class}">
+      <div class="score-display">
+        <div class="score-title">观测适宜度评分</div>
+        <div class="score-number">${total}</div>
+        <div class="score-label">${level.label}</div>
+      </div>
+      <div>
+        <div class="score-breakdown">
+          <div class="breakdown-item">
+            <span class="breakdown-label">黑夜时长</span>
+            <div class="breakdown-bar">
+              <div class="breakdown-progress progress-night" style="width: ${(breakdown.nightHours.score / breakdown.nightHours.max * 100).toFixed(0)}%"></div>
+            </div>
+            <span class="breakdown-score">${breakdown.nightHours.score}/${breakdown.nightHours.max}</span>
+            <div class="breakdown-detail">${breakdown.nightHours.detail}</div>
+          </div>
+          <div class="breakdown-item">
+            <span class="breakdown-label">月相条件</span>
+            <div class="breakdown-bar">
+              <div class="breakdown-progress progress-moon" style="width: ${(breakdown.moon.score / breakdown.moon.max * 100).toFixed(0)}%"></div>
+            </div>
+            <span class="breakdown-score">${breakdown.moon.score}/${breakdown.moon.max}</span>
+            <div class="breakdown-detail">${breakdown.moon.detail}（照度 ${breakdown.moon.illumination}）</div>
+          </div>
+          <div class="breakdown-item">
+            <span class="breakdown-label">季节因素</span>
+            <div class="breakdown-bar">
+              <div class="breakdown-progress progress-season" style="width: ${(breakdown.season.score / breakdown.season.max * 100).toFixed(0)}%"></div>
+            </div>
+            <span class="breakdown-score">${breakdown.season.score}/${breakdown.season.max}</span>
+            <div class="breakdown-detail">${breakdown.season.detail}</div>
+          </div>
+        </div>
+        <div class="suggestions-section">
+          <div class="suggestions-title">🌟 适合观测项目</div>
+          <div class="suitable-list">
+            ${suggestions.suitable.map((s) => `<span class="suitable-tag">${s}</span>`).join('')}
+          </div>
+          <div class="suggestions-title">💡 观测建议</div>
+          <ul class="tips-list">
+            ${suggestions.tips.map((t) => `<li>${t}</li>`).join('')}
+          </ul>
+        </div>
+      </div>
+    </div>
+  `
+}
+
 function renderResults(city, dateStr, data, moon) {
   document.getElementById('result-location').textContent = `${city.name}（${city.lat}°N, ${city.lng}°E）`
   document.getElementById('result-date').textContent = dateStr
 
   renderTimeline(data.keyTimes, data.summary, data.times)
+  renderScoreCard(city.lat, dateStr, data, moon)
 
   const tbody = document.querySelector('#times-table tbody')
   tbody.innerHTML = data.allRows

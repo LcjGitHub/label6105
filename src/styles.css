@@ -1047,6 +1047,168 @@ body {
   grid-template-columns: 1fr 1fr;
 }
 
+/* Score Card */
+.card--score {
+  border-color: rgba(110, 181, 255, 0.25);
+  background: linear-gradient(135deg, rgba(18, 28, 52, 0.92), rgba(12, 18, 36, 0.92));
+}
+
+.score-card {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.score-display {
+  text-align: center;
+  padding: 0.5rem 0;
+}
+
+.score-number {
+  font-size: 3.5rem;
+  font-weight: 700;
+  line-height: 1;
+  font-family: var(--mono);
+  margin-bottom: 0.25rem;
+}
+
+.score-label {
+  display: inline-block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0.25rem 0.85rem;
+  border-radius: 999px;
+  margin-bottom: 0.75rem;
+}
+
+.score-excellent .score-number { color: var(--excellent); text-shadow: 0 0 20px rgba(80, 250, 123, 0.4); }
+.score-excellent .score-label { background: rgba(80, 250, 123, 0.15); color: var(--excellent); border: 1px solid rgba(80, 250, 123, 0.35); }
+
+.score-good .score-number { color: var(--good); text-shadow: 0 0 20px rgba(139, 233, 253, 0.4); }
+.score-good .score-label { background: rgba(139, 233, 253, 0.12); color: var(--good); border: 1px solid rgba(139, 233, 253, 0.35); }
+
+.score-fair .score-number { color: var(--fair); text-shadow: 0 0 20px rgba(241, 250, 140, 0.4); }
+.score-fair .score-label { background: rgba(241, 250, 140, 0.12); color: var(--fair); border: 1px solid rgba(241, 250, 140, 0.35); }
+
+.score-poor .score-number { color: #ffb86c; text-shadow: 0 0 20px rgba(255, 184, 108, 0.4); }
+.score-poor .score-label { background: rgba(255, 184, 108, 0.12); color: #ffb86c; border: 1px solid rgba(255, 184, 108, 0.35); }
+
+.score-verypoor .score-number { color: var(--poor); }
+.score-verypoor .score-label { background: rgba(98, 114, 164, 0.2); color: var(--poor); border: 1px solid rgba(98, 114, 164, 0.35); }
+
+.score-title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: var(--text);
+}
+
+.score-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.breakdown-item {
+  display: grid;
+  grid-template-columns: 90px 1fr 36px;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.breakdown-label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.breakdown-bar {
+  position: relative;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.breakdown-progress {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.6s ease;
+}
+
+.progress-night { background: linear-gradient(90deg, #6272a4, #8be9fd); }
+.progress-moon { background: linear-gradient(90deg, #bd93f9, #ff79c6); }
+.progress-season { background: linear-gradient(90deg, #50fa7b, #f1fa8c); }
+
+.breakdown-score {
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text);
+  text-align: right;
+}
+
+.breakdown-detail {
+  grid-column: 2 / -1;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-top: -0.3rem;
+}
+
+.suggestions-section {
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(100, 130, 180, 0.12);
+}
+
+.suggestions-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  color: var(--text);
+}
+
+.suitable-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.suitable-tag {
+  font-size: 0.78rem;
+  font-weight: 500;
+  padding: 0.3rem 0.7rem;
+  border-radius: 6px;
+  background: rgba(110, 181, 255, 0.1);
+  color: var(--accent);
+  border: 1px solid rgba(110, 181, 255, 0.25);
+}
+
+.tips-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.tips-list li {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  padding-left: 1rem;
+  position: relative;
+  line-height: 1.5;
+}
+
+.tips-list li::before {
+  content: '•';
+  position: absolute;
+  left: 0;
+  color: var(--accent);
+  font-weight: bold;
+}
+
 /* Responsive */
 @media (max-width: 960px) {
   .compare-grid {
@@ -1103,5 +1265,18 @@ body {
   .timeline-legend__item {
     font-size: 0.62rem;
     padding: 0.15rem 0.4rem;
+  }
+
+  .score-card {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .score-number {
+    font-size: 2.8rem;
+  }
+
+  .breakdown-item {
+    grid-template-columns: 75px 1fr 32px;
   }
 }

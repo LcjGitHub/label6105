@@ -369,3 +369,219 @@ function computeAzimuthForEvents(lat, lng, times) {
 }
 
 export { formatTime, diffHours }
+
+/**
+ * 观测适宜度评分等级定义
+ */
+export const SCORE_LEVELS = {
+  excellent: { minScore: 85, label: '极佳', class: 'score-excellent' },
+  good: { minScore: 70, label: '良好', class: 'score-good' },
+  fair: { minScore: 55, label: '一般', class: 'score-fair' },
+  poor: { minScore: 35, label: '较差', class: 'score-poor' },
+  veryPoor: { minScore: 0, label: '不适宜', class: 'score-verypoor' },
+}
+
+export function getScoreLevel(score) {
+  if (score >= SCORE_LEVELS.excellent.minScore) return SCORE_LEVELS.excellent
+  if (score >= SCORE_LEVELS.good.minScore) return SCORE_LEVELS.good
+  if (score >= SCORE_LEVELS.fair.minScore) return SCORE_LEVELS.fair
+  if (score >= SCORE_LEVELS.poor.minScore) return SCORE_LEVELS.poor
+  return SCORE_LEVELS.veryPoor
+}
+
+function calcNightHoursScore(nightHours) {
+  if (nightHours == null || nightHours <= 0) return { score: 0, detail: '无天文黑夜' }
+  let score = 0
+  let detail = ''
+  if (nightHours >= 6) {
+    score = 40
+    detail = '黑夜充足（≥6 小时）'
+  } else if (nightHours >= 5) {
+    score = 35 + (nightHours - 5) * 5
+    detail = '黑夜较长'
+  } else if (nightHours >= 4) {
+    score = 30 + (nightHours - 4) * 5
+    detail = '黑夜充足'
+  } else if (nightHours >= 3) {
+    score = 22 + (nightHours - 3) * 8
+    detail = '黑夜适中'
+  } else if (nightHours >= 2) {
+    score = 14 + (nightHours - 2) * 8
+    detail = '黑夜较短'
+  } else if (nightHours >= 1) {
+    score = 6 + (nightHours - 1) * 8
+    detail = '黑夜很短'
+  } else {
+    score = nightHours * 6
+    detail = '黑夜极短'
+  }
+  return { score: Math.round(score), detail }
+}
+
+function calcMoonScore(illuminationFraction, nightStart, nightEnd, moonrise, moonset) {
+  const illumScoreBase = Math.max(0, 1 - illuminationFraction) * 30
+
+  let moonInNightPenalty = 0
+  if (nightStart && nightEnd && (moonrise || moonset)) {
+    const nightStartMin = nightStart.getHours() * 60 + nightStart.getMinutes()
+    const nightEndMin = nightEnd.getHours() * 60 + nightEnd.getMinutes() + 24 * 60
+    const moonriseMin = moonrise ? moonrise.getHours() * 60 + moonrise.getMinutes() : null
+    const moonsetMin = moonset ? moonset.getHours() * 60 + moonset.getMinutes() + (moonset < nightStart ? 24 * 60 : 0) : null
+
+    let overlapMin = 0
+    const startMin = Math.max(nightStartMin, moonriseMin ?? nightStartMin)
+    const endMin = Math.min(nightEndMin, moonsetMin ?? nightEndMin)
+    if (startMin < endMin) {
+      overlapMin = endMin - startMin
+    }
+
+    const totalNightMin = nightEndMin - nightStartMin
+    const overlapRatio = totalNightMin > 0 ? overlapMin / totalNightMin : 0
+    moonInNightPenalty = overlapRatio * 5
+  }
+
+  const score = Math.max(0, illumScoreBase - moonInNightPenalty)
+
+  let detail
+  if (illuminationFraction < 0.1) detail = '新月/残月，月光干扰极小'
+  else if (illuminationFraction < 0.3) detail = '娥眉月/残月，月光干扰小'
+  else if (illuminationFraction < 0.5) detail = '弦月/盈凸月，有一定月光干扰'
+  else if (illuminationFraction < 0.7) detail = '盈凸月/亏凸月，月光干扰较大'
+  else detail = '满月附近，月光干扰严重'
+
+  return { score: Math.round(score), detail, illumination: `${(illuminationFraction * 100).toFixed(0)}%` }
+}
+
+function calcSeasonScore(lat, date) {
+  const month = date.getMonth()
+  const isNorthernHemisphere = lat >= 0
+  let score = 0
+  let detail = ''
+
+  if (isNorthernHemisphere) {
+    if (month >= 10 || month <= 1) {
+      score = 25
+      detail = '冬季，观测条件最佳'
+    } else if (month === 9 || month === 2) {
+      score = 22
+      detail = '春秋季过渡，观测条件良好'
+    } else if (month === 8 || month === 3) {
+      score = 18
+      detail = '夏末/初春，观测条件一般'
+    } else if (month >= 4 && month <= 7) {
+      score = 10 + (month === 6 || month === 7 ? 0 : 3)
+      detail = '夏季，观测条件较差'
+    }
+  } else {
+    if (month >= 4 && month <= 7) {
+      score = 25
+      detail = '冬季，观测条件最佳'
+    } else if (month === 3 || month === 8) {
+      score = 22
+      detail = '春秋季过渡，观测条件良好'
+    } else if (month === 2 || month === 9) {
+      score = 18
+      detail = '夏末/初春，观测条件一般'
+    } else {
+      score = 10 + (month === 11 || month === 12 ? 0 : 3)
+      detail = '夏季，观测条件较差'
+    }
+  }
+
+  if (Math.abs(lat) > 60) {
+    if (score < 15) score = Math.max(5, score - 5)
+  }
+
+  return { score, detail }
+}
+
+export function computeObservationScore(params) {
+  const { nightHours, lat, dateStr, moonIllumination, nightStart, nightEnd, moonrise, moonset } = params
+  const date = parseLocalDate(dateStr)
+
+  const nightHoursResult = calcNightHoursScore(nightHours)
+  const moonResult = calcMoonScore(moonIllumination, nightStart, nightEnd, moonrise, moonset)
+  const seasonResult = calcSeasonScore(lat, date)
+
+  const totalScore = Math.min(100, nightHoursResult.score + moonResult.score + seasonResult.score)
+  const level = getScoreLevel(totalScore)
+
+  return {
+    total: totalScore,
+    level,
+    breakdown: {
+      nightHours: {
+        score: nightHoursResult.score,
+        max: 40,
+        detail: nightHoursResult.detail,
+      },
+      moon: {
+        score: moonResult.score,
+        max: 35,
+        detail: moonResult.detail,
+        illumination: moonResult.illumination,
+      },
+      season: {
+        score: seasonResult.score,
+        max: 25,
+        detail: seasonResult.detail,
+      },
+    },
+  }
+}
+
+export function generateObservingSuggestions(scoreData, moonPhase) {
+  const { total, breakdown } = scoreData
+  const suggestions = {
+    suitable: [],
+    tips: [],
+  }
+
+  if (total >= 85) {
+    suggestions.suitable.push('深空天体摄影（长曝光）')
+    suggestions.suitable.push('深空天体目视观测')
+    suggestions.suitable.push('暗弱星系/星云观测')
+    suggestions.tips.push('极佳的观测夜晚，适合安排长时间观测计划')
+  } else if (total >= 70) {
+    suggestions.suitable.push('深空天体摄影')
+    suggestions.suitable.push('深空天体目视观测')
+    suggestions.suitable.push('行星观测')
+    suggestions.tips.push('良好的观测条件，可进行中等时长曝光')
+  } else if (total >= 55) {
+    suggestions.suitable.push('行星观测（木星、土星等明亮天体）')
+    suggestions.suitable.push('月球观测与摄影')
+    suggestions.suitable.push('双星/聚星观测')
+    suggestions.tips.push('中等条件，建议选择高对比度目标')
+  } else if (total >= 35) {
+    suggestions.suitable.push('月球观测与摄影')
+    suggestions.suitable.push('行星观测')
+    suggestions.suitable.push('明亮深空天体（如M42猎户座大星云等）')
+    suggestions.tips.push('条件有限，优先选择明亮目标')
+  } else {
+    suggestions.suitable.push('月球观测与摄影')
+    suggestions.suitable.push('明亮行星观测')
+    suggestions.tips.push('观测条件较差，建议以月球和行星等明亮天体为主')
+  }
+
+  if (breakdown.moon.score >= 25) {
+    suggestions.tips.push('月光干扰小，非常适合深空摄影')
+  } else if (breakdown.moon.score >= 15) {
+    suggestions.tips.push('有一定月光，可选择远离月球方向观测')
+  } else {
+    suggestions.tips.push('月光强烈，建议以月球、行星观测为主')
+  }
+
+  if (breakdown.nightHours.score >= 30) {
+    suggestions.tips.push('黑夜时间充足，可安排丰富的观测列表')
+  } else if (breakdown.nightHours.score >= 15) {
+    suggestions.tips.push('黑夜时间有限，建议精选观测目标')
+  }
+
+  if (['新月', '残月'].includes(moonPhase)) {
+    suggestions.suitable.push('暗弱深空目标优先')
+  } else if (moonPhase === '满月') {
+    suggestions.suitable.unshift('月球细节摄影最佳时机')
+  }
+
+  return suggestions
+}
