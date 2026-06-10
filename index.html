@@ -95,6 +95,20 @@
               <div class="timeline" id="timeline"></div>
             </div>
             <div class="card card--score" id="score-card"></div>
+            <div id="share-modal" class="share-modal" hidden>
+              <div class="share-modal__overlay" data-close-share></div>
+              <div class="share-modal__content">
+                <button class="share-modal__close" type="button" data-close-share aria-label="关闭">&times;</button>
+                <h3 class="share-modal__title">分享观测结果</h3>
+                <div class="share-modal__preview">
+                  <canvas id="share-canvas" width="800" height="1000"></canvas>
+                </div>
+                <div class="share-modal__actions">
+                  <button type="button" class="btn btn--primary" id="btn-download-img">📥 下载图片</button>
+                  <button type="button" class="btn btn--ghost" id="btn-copy-img">📋 复制到剪贴板</button>
+                </div>
+              </div>
+            </div>
             <div class="card">
               <h2 class="card__title">详细时刻表</h2>
               <div class="table-scroll">
