@@ -70,14 +70,39 @@ function renderTimeline(keyTimes, summary) {
   const eveningEvents = keyTimes.filter((k) =>
     ['dusk', 'nauticalDusk', 'night'].includes(k.key),
   )
+  const { goldenHours, blueHours } = summary
 
   timeline.innerHTML = `
     <div class="timeline__bar">
-      <div class="timeline__segment timeline__segment--day" style="flex:2">白昼</div>
+      <div class="timeline__segment timeline__segment--day" style="flex:2">
+        <span class="segment-label">白昼</span>
+        <span class="segment-sub">黄金时刻</span>
+      </div>
+      <div class="timeline__segment timeline__segment--blue">
+        <span class="segment-label">蓝调时刻</span>
+      </div>
       <div class="timeline__segment timeline__segment--civil">民用暮光</div>
       <div class="timeline__segment timeline__segment--nautical">航海暮光</div>
       <div class="timeline__segment timeline__segment--astro">天文暮光</div>
       <div class="timeline__segment timeline__segment--night">天文黑夜</div>
+    </div>
+    <div class="timeline__photography">
+      <div class="photo-period photo-period--blue-morning">
+        <span class="photo-period__label">🌅 晨蓝调时刻</span>
+        <span class="photo-period__time">${blueHours.morning.startStr} → ${blueHours.morning.endStr}</span>
+      </div>
+      <div class="photo-period photo-period--golden-morning">
+        <span class="photo-period__label">🌞 晨黄金时刻</span>
+        <span class="photo-period__time">${goldenHours.morning.startStr} → ${goldenHours.morning.endStr}</span>
+      </div>
+      <div class="photo-period photo-period--golden-evening">
+        <span class="photo-period__label">🌇 暮黄金时刻</span>
+        <span class="photo-period__time">${goldenHours.evening.startStr} → ${goldenHours.evening.endStr}</span>
+      </div>
+      <div class="photo-period photo-period--blue-evening">
+        <span class="photo-period__label">🌆 暮蓝调时刻</span>
+        <span class="photo-period__time">${blueHours.evening.startStr} → ${blueHours.evening.endStr}</span>
+      </div>
     </div>
     <div class="timeline__markers">
       ${eveningEvents
@@ -146,9 +171,34 @@ function renderResults(city, dateStr, data, moon) {
   const sunsetStartAzStr = sunsetStartAz
     ? `<span class="azimuth__dir">${sunsetStartAz.direction}</span> <span class="azimuth__deg">${sunsetStartAz.degrees}°</span>`
     : '—'
+  const { goldenHours, blueHours } = data.summary
   nightSummary.innerHTML = `
     <h3>观测评估</h3>
     <p class="night-summary__main">${level}</p>
+    <h3 class="photo-section-title">📸 摄影师时段</h3>
+    <div class="photo-grid">
+      <div class="photo-card photo-card--golden">
+        <div class="photo-card__header">🌞 晨黄金时刻</div>
+        <div class="photo-card__time">${goldenHours.morning.startStr} → ${goldenHours.morning.endStr}</div>
+        <div class="photo-card__desc">日出后一小时，暖金色光线</div>
+      </div>
+      <div class="photo-card photo-card--blue">
+        <div class="photo-card__header">🌅 晨蓝调时刻</div>
+        <div class="photo-card__time">${blueHours.morning.startStr} → ${blueHours.morning.endStr}</div>
+        <div class="photo-card__desc">民用晨光期间，冷蓝色调</div>
+      </div>
+      <div class="photo-card photo-card--golden">
+        <div class="photo-card__header">🌇 暮黄金时刻</div>
+        <div class="photo-card__time">${goldenHours.evening.startStr} → ${goldenHours.evening.endStr}</div>
+        <div class="photo-card__desc">日落前一小时，暖金色光线</div>
+      </div>
+      <div class="photo-card photo-card--blue">
+        <div class="photo-card__header">🌆 暮蓝调时刻</div>
+        <div class="photo-card__time">${blueHours.evening.startStr} → ${blueHours.evening.endStr}</div>
+        <div class="photo-card__desc">民用暮光期间，冷蓝色调</div>
+      </div>
+    </div>
+    <h3>🌌 天文观测</h3>
     <ul class="night-summary__list">
       <li>日出方位：<strong>${sunriseAzStr}</strong></li>
       <li>日落开始方位：<strong>${sunsetStartAzStr}</strong></li>
@@ -269,14 +319,39 @@ function renderCompareTimeline(timelineId, keyTimes, summary) {
   const eveningEvents = keyTimes.filter((k) =>
     ['dusk', 'nauticalDusk', 'night'].includes(k.key),
   )
+  const { goldenHours, blueHours } = summary
 
   timeline.innerHTML = `
     <div class="timeline__bar">
-      <div class="timeline__segment timeline__segment--day" style="flex:2">白昼</div>
+      <div class="timeline__segment timeline__segment--day" style="flex:2">
+        <span class="segment-label">白昼</span>
+        <span class="segment-sub">黄金时刻</span>
+      </div>
+      <div class="timeline__segment timeline__segment--blue">
+        <span class="segment-label">蓝调时刻</span>
+      </div>
       <div class="timeline__segment timeline__segment--civil">民用暮光</div>
       <div class="timeline__segment timeline__segment--nautical">航海暮光</div>
       <div class="timeline__segment timeline__segment--astro">天文暮光</div>
       <div class="timeline__segment timeline__segment--night">天文黑夜</div>
+    </div>
+    <div class="timeline__photography">
+      <div class="photo-period photo-period--blue-morning">
+        <span class="photo-period__label">🌅 晨蓝调</span>
+        <span class="photo-period__time">${blueHours.morning.startStr} → ${blueHours.morning.endStr}</span>
+      </div>
+      <div class="photo-period photo-period--golden-morning">
+        <span class="photo-period__label">🌞 晨黄金</span>
+        <span class="photo-period__time">${goldenHours.morning.startStr} → ${goldenHours.morning.endStr}</span>
+      </div>
+      <div class="photo-period photo-period--golden-evening">
+        <span class="photo-period__label">🌇 暮黄金</span>
+        <span class="photo-period__time">${goldenHours.evening.startStr} → ${goldenHours.evening.endStr}</span>
+      </div>
+      <div class="photo-period photo-period--blue-evening">
+        <span class="photo-period__label">🌆 暮蓝调</span>
+        <span class="photo-period__time">${blueHours.evening.startStr} → ${blueHours.evening.endStr}</span>
+      </div>
     </div>
     <div class="timeline__markers">
       ${eveningEvents
@@ -323,9 +398,30 @@ function renderCompareSummary(summaryId, data) {
   const sunsetStartAzStr = sunsetStartAz
     ? `<span class="azimuth__dir">${sunsetStartAz.direction}</span> <span class="azimuth__deg">${sunsetStartAz.degrees}°</span>`
     : '—'
+  const { goldenHours, blueHours } = data.summary
   summaryEl.innerHTML = `
     <h3>观测评估</h3>
     <p class="night-summary__main">${level}</p>
+    <h3 class="photo-section-title">📸 摄影师时段</h3>
+    <div class="photo-grid photo-grid--compact">
+      <div class="photo-card photo-card--golden">
+        <div class="photo-card__header">🌞 晨黄金</div>
+        <div class="photo-card__time">${goldenHours.morning.startStr} → ${goldenHours.morning.endStr}</div>
+      </div>
+      <div class="photo-card photo-card--blue">
+        <div class="photo-card__header">🌅 晨蓝调</div>
+        <div class="photo-card__time">${blueHours.morning.startStr} → ${blueHours.morning.endStr}</div>
+      </div>
+      <div class="photo-card photo-card--golden">
+        <div class="photo-card__header">🌇 暮黄金</div>
+        <div class="photo-card__time">${goldenHours.evening.startStr} → ${goldenHours.evening.endStr}</div>
+      </div>
+      <div class="photo-card photo-card--blue">
+        <div class="photo-card__header">🌆 暮蓝调</div>
+        <div class="photo-card__time">${blueHours.evening.startStr} → ${blueHours.evening.endStr}</div>
+      </div>
+    </div>
+    <h3>🌌 天文观测</h3>
     <ul class="night-summary__list">
       <li>日出方位：<strong>${sunriseAzStr}</strong></li>
       <li>日落开始方位：<strong>${sunsetStartAzStr}</strong></li>

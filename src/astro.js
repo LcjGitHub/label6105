@@ -7,6 +7,13 @@ export const TWILIGHT = {
   astronomical: -18,
 }
 
+/** 摄影师时段定义 */
+export const PHOTOGRAPHY_PERIODS = {
+  goldenHourDuration: 60,
+  blueHourMorning: { startKey: 'dawn', endKey: 'sunrise', label: '晨蓝调时刻' },
+  blueHourEvening: { startKey: 'sunset', endKey: 'dusk', label: '暮蓝调时刻' },
+}
+
 /**
  * SunCalc 返回的时刻键与中文标签
  *  evening: 日落方向（暮）；morning: 日出方向（晨）
@@ -49,6 +56,64 @@ function diffHours(start, end) {
   return ms / (1000 * 60 * 60)
 }
 
+function addMinutes(date, minutes) {
+  if (!date || Number.isNaN(date.getTime())) return null
+  return new Date(date.getTime() + minutes * 60 * 1000)
+}
+
+export function computeGoldenHours(times) {
+  const duration = PHOTOGRAPHY_PERIODS.goldenHourDuration
+  const morningStart = times.sunrise
+  const morningEnd = times.sunrise ? addMinutes(times.sunrise, duration) : null
+  const eveningEnd = times.sunset
+  const eveningStart = times.sunset ? addMinutes(times.sunset, -duration) : null
+
+  return {
+    morning: {
+      start: morningStart,
+      end: morningEnd,
+      startStr: formatTime(morningStart),
+      endStr: formatTime(morningEnd),
+      label: '晨黄金时刻',
+      durationHours: diffHours(morningStart, morningEnd),
+    },
+    evening: {
+      start: eveningStart,
+      end: eveningEnd,
+      startStr: formatTime(eveningStart),
+      endStr: formatTime(eveningEnd),
+      label: '暮黄金时刻',
+      durationHours: diffHours(eveningStart, eveningEnd),
+    },
+  }
+}
+
+export function computeBlueHours(times) {
+  const morningStart = times.dawn
+  const morningEnd = times.sunrise
+  const eveningStart = times.sunset
+  const eveningEnd = times.dusk
+
+  return {
+    morning: {
+      start: morningStart,
+      end: morningEnd,
+      startStr: formatTime(morningStart),
+      endStr: formatTime(morningEnd),
+      label: '晨蓝调时刻',
+      durationHours: diffHours(morningStart, morningEnd),
+    },
+    evening: {
+      start: eveningStart,
+      end: eveningEnd,
+      startStr: formatTime(eveningStart),
+      endStr: formatTime(eveningEnd),
+      label: '暮蓝调时刻',
+      durationHours: diffHours(eveningStart, eveningEnd),
+    },
+  }
+}
+
 /**
  * 计算指定位置、日期的暮光时刻
  */
@@ -56,6 +121,8 @@ export function computeTwilightTimes(lat, lng, dateStr) {
   const date = parseLocalDate(dateStr)
   const times = SunCalc.getTimes(date, lat, lng)
   const azimuths = computeAzimuthForEvents(lat, lng, times)
+  const goldenHours = computeGoldenHours(times)
+  const blueHours = computeBlueHours(times)
 
   const rows = TIME_EVENTS.map((ev) => ({
     ...ev,
@@ -76,6 +143,8 @@ export function computeTwilightTimes(lat, lng, dateStr) {
     times,
     rows,
     azimuths,
+    goldenHours,
+    blueHours,
     keyTimes: KEY_EVENTS.map((ev) => ({
       ...ev,
       time: times[ev.key],
@@ -90,6 +159,8 @@ export function computeTwilightTimes(lat, lng, dateStr) {
       solarNoon: times.solarNoon,
       sunriseAzimuth: azimuths.sunrise,
       sunsetStartAzimuth: azimuths.sunsetStart,
+      goldenHours,
+      blueHours,
     },
   }
 }

@@ -23,6 +23,12 @@
   --good: #8be9fd;
   --fair: #f1fa8c;
   --poor: #6272a4;
+  --golden: #ffd166;
+  --golden-dark: #e8a94f;
+  --golden-glow: rgba(255, 209, 102, 0.25);
+  --blue-hour: #4d9de0;
+  --blue-hour-dark: #2e6ba8;
+  --blue-hour-glow: rgba(77, 157, 224, 0.25);
   --radius: 12px;
   --font: 'Noto Sans SC', system-ui, sans-serif;
   --mono: 'JetBrains Mono', monospace;
@@ -272,11 +278,209 @@ body {
   min-width: 0;
 }
 
-.timeline__segment--day { background: linear-gradient(90deg, #3d5a80, #5c7a9e); flex: 3; }
+.timeline__segment--day { background: linear-gradient(90deg, #3d5a80, var(--golden), #5c7a9e); flex: 3; flex-direction: column; gap: 2px; }
+.timeline__segment--blue { background: linear-gradient(90deg, var(--blue-hour-dark), var(--blue-hour)); color: #fff; flex: 1; }
 .timeline__segment--civil { background: var(--civil); color: #1a1008; flex: 1; }
 .timeline__segment--nautical { background: var(--nautical); color: #1a1020; flex: 1; }
 .timeline__segment--astro { background: var(--astro); flex: 1; }
 .timeline__segment--night { background: #0f1525; flex: 2; }
+
+.segment-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+}
+
+.segment-sub {
+  font-size: 0.55rem;
+  opacity: 0.85;
+  font-weight: 500;
+}
+
+/* Timeline legend */
+.timeline-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding: 0.6rem 0.75rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+.timeline-legend__title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-right: 0.25rem;
+}
+
+.timeline-legend__item {
+  font-size: 0.7rem;
+  font-weight: 500;
+  padding: 0.2rem 0.55rem;
+  border-radius: 6px;
+  border: 1px solid transparent;
+}
+
+.timeline-legend__item--golden {
+  background: var(--golden-glow);
+  color: var(--golden);
+  border-color: rgba(255, 209, 102, 0.3);
+}
+
+.timeline-legend__item--blue {
+  background: var(--blue-hour-glow);
+  color: var(--blue-hour);
+  border-color: rgba(77, 157, 224, 0.3);
+}
+
+.timeline-legend__item--civil {
+  background: rgba(255, 184, 108, 0.15);
+  color: var(--civil);
+  border-color: rgba(255, 184, 108, 0.3);
+}
+
+.timeline-legend__item--nautical {
+  background: rgba(189, 147, 249, 0.15);
+  color: var(--nautical);
+  border-color: rgba(189, 147, 249, 0.3);
+}
+
+.timeline-legend__item--astro {
+  background: rgba(98, 114, 164, 0.2);
+  color: #a0aec0;
+  border-color: rgba(98, 114, 164, 0.3);
+}
+
+.timeline-legend__item--night {
+  background: rgba(15, 21, 37, 0.6);
+  color: #8899b0;
+  border-color: rgba(98, 114, 164, 0.2);
+}
+
+/* Photography periods */
+.timeline__photography {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+
+.photo-period {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 0.65rem 0.5rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: rgba(0, 0, 0, 0.2);
+  gap: 0.25rem;
+}
+
+.photo-period--golden-morning,
+.photo-period--golden-evening {
+  background: var(--golden-glow);
+  border-color: rgba(255, 209, 102, 0.35);
+}
+
+.photo-period--blue-morning,
+.photo-period--blue-evening {
+  background: var(--blue-hour-glow);
+  border-color: rgba(77, 157, 224, 0.35);
+}
+
+.photo-period__label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.photo-period--golden-morning .photo-period__label,
+.photo-period--golden-evening .photo-period__label {
+  color: var(--golden);
+}
+
+.photo-period--blue-morning .photo-period__label,
+.photo-period--blue-evening .photo-period__label {
+  color: var(--blue-hour);
+}
+
+.photo-period__time {
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* Photography cards in summary */
+.photo-section-title {
+  margin-top: 1rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+
+.photo-grid--compact {
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.45rem;
+}
+
+.photo-card {
+  padding: 0.75rem 0.85rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.photo-card--golden {
+  background: linear-gradient(135deg, rgba(255, 209, 102, 0.12), rgba(232, 169, 79, 0.06));
+  border-color: rgba(255, 209, 102, 0.3);
+}
+
+.photo-card--blue {
+  background: linear-gradient(135deg, rgba(77, 157, 224, 0.12), rgba(46, 107, 168, 0.06));
+  border-color: rgba(77, 157, 224, 0.3);
+}
+
+.photo-card__header {
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.photo-card--golden .photo-card__header {
+  color: var(--golden);
+}
+
+.photo-card--blue .photo-card__header {
+  color: var(--blue-hour);
+}
+
+.photo-card__time {
+  font-family: var(--mono);
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.photo-card__desc {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
 
 .timeline__markers {
   display: grid;
@@ -818,6 +1022,14 @@ body {
     grid-template-columns: 1fr;
   }
 
+  .timeline__photography {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .photo-grid {
+    grid-template-columns: 1fr;
+  }
+
   .moon-card__grid {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -832,5 +1044,15 @@ body {
 
   .header h1 {
     font-size: 1.05rem;
+  }
+
+  .timeline-legend {
+    gap: 0.3rem;
+    padding: 0.5rem;
+  }
+
+  .timeline-legend__item {
+    font-size: 0.62rem;
+    padding: 0.15rem 0.4rem;
   }
 }
