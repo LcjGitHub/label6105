@@ -1007,27 +1007,29 @@ function drawShareCanvas(shareData) {
   let y = 40
 
   ctx.save()
-  roundRect(ctx, 40, y, W - 80, 90, 16)
+  roundRect(ctx, 40, y, W - 80, 78, 16)
   ctx.fillStyle = 'rgba(110, 181, 255, 0.08)'
   ctx.fill()
   ctx.lineWidth = 1
   ctx.strokeStyle = 'rgba(110, 181, 255, 0.25)'
   ctx.stroke()
 
-  ctx.font = '36px "Noto Sans SC", sans-serif'
+  ctx.font = '34px "Noto Sans SC", sans-serif'
   ctx.fillStyle = '#6eb5ff'
-  ctx.fillText('🌌', 68, y + 58)
+  ctx.fillText('🌌', 68, y + 52)
 
   ctx.font = 'bold 26px "Noto Sans SC", sans-serif'
   ctx.fillStyle = '#e8edf5'
   ctx.fillText('天文暮光 · 观测助手', 120, y + 50)
-
-  ctx.font = '14px "JetBrains Mono", monospace'
-  ctx.fillStyle = '#8899b0'
-  ctx.fillText('Astronomical Twilight Observer', 120, y + 75)
   ctx.restore()
 
-  y += 120
+  y += 108
+
+  function formatLatLng(lat, lng) {
+    const latStr = lat >= 0 ? `${lat}°N` : `${Math.abs(lat)}°S`
+    const lngStr = lng >= 0 ? `${lng}°E` : `${Math.abs(lng)}°W`
+    return `${latStr}, ${lngStr}`
+  }
 
   ctx.save()
   ctx.font = 'bold 28px "Noto Sans SC", sans-serif'
@@ -1036,7 +1038,7 @@ function drawShareCanvas(shareData) {
 
   ctx.font = '16px "Noto Sans SC", sans-serif'
   ctx.fillStyle = '#8899b0'
-  ctx.fillText(`${city.lat}°N, ${city.lng}°E`, 40, y + 28)
+  ctx.fillText(formatLatLng(city.lat, city.lng), 40, y + 28)
 
   ctx.font = '18px "JetBrains Mono", monospace'
   ctx.fillStyle = '#6eb5ff'
@@ -1050,8 +1052,8 @@ function drawShareCanvas(shareData) {
   const colors = getLevelColors(level.class)
 
   ctx.save()
-  roundRect(ctx, 40, y, W - 80, 180, 16)
-  const scoreBg = ctx.createLinearGradient(40, y, 40, y + 180)
+  roundRect(ctx, 40, y, W - 80, 170, 16)
+  const scoreBg = ctx.createLinearGradient(40, y, 40, y + 170)
   scoreBg.addColorStop(0, 'rgba(18, 28, 52, 0.95)')
   scoreBg.addColorStop(1, 'rgba(12, 18, 36, 0.95)')
   ctx.fillStyle = scoreBg
@@ -1062,34 +1064,34 @@ function drawShareCanvas(shareData) {
 
   ctx.font = '16px "Noto Sans SC", sans-serif'
   ctx.fillStyle = '#8899b0'
-  ctx.fillText('📊 观测适宜度综合评分', 64, y + 40)
+  ctx.fillText('📊 观测适宜度综合评分', 64, y + 38)
 
-  ctx.font = 'bold 88px "JetBrains Mono", monospace'
+  ctx.font = 'bold 84px "JetBrains Mono", monospace'
   ctx.fillStyle = colors.main
   ctx.shadowColor = colors.glow
   ctx.shadowBlur = 30
   ctx.textAlign = 'center'
-  ctx.fillText(total, W / 2 - 80, y + 125)
+  ctx.fillText(total, W / 2 - 80, y + 118)
   ctx.shadowBlur = 0
   ctx.textAlign = 'left'
 
   ctx.font = 'bold 22px "Noto Sans SC", sans-serif'
   ctx.fillStyle = colors.main
-  roundRect(ctx, W / 2 + 20, y + 85, 180, 44, 22)
+  roundRect(ctx, W / 2 + 20, y + 80, 180, 44, 22)
   ctx.fill()
   ctx.fillStyle = '#0a0e17'
   ctx.textAlign = 'center'
-  ctx.fillText(level.label, W / 2 + 110, y + 115)
+  ctx.fillText(level.label, W / 2 + 110, y + 110)
   ctx.textAlign = 'left'
 
   ctx.font = '14px "Noto Sans SC", sans-serif'
   ctx.fillStyle = '#8899b0'
   ctx.textAlign = 'right'
-  ctx.fillText('满分 100 分', W - 64, y + 40)
+  ctx.fillText('满分 100 分', W - 64, y + 38)
   ctx.textAlign = 'left'
   ctx.restore()
 
-  y += 210
+  y += 198
 
   ctx.save()
   ctx.font = 'bold 18px "Noto Sans SC", sans-serif'
@@ -1097,7 +1099,7 @@ function drawShareCanvas(shareData) {
   ctx.fillText('📋 评分分项', 40, y)
   ctx.restore()
 
-  y += 30
+  y += 28
 
   const breakdownItems = [
     { label: '黑夜时长', data: breakdown.nightHours, colors: ['#6272a4', '#8be9fd'] },
@@ -1136,13 +1138,13 @@ function drawShareCanvas(shareData) {
 
     ctx.font = '12px "Noto Sans SC", sans-serif'
     ctx.fillStyle = '#6272a4'
-    ctx.fillText(item.data.detail, barX, y + 40)
+    ctx.fillText(item.data.detail, barX, y + 38)
 
     ctx.restore()
-    y += 58
+    y += 54
   })
 
-  y += 16
+  y += 14
 
   ctx.save()
   ctx.font = 'bold 18px "Noto Sans SC", sans-serif'
@@ -1150,10 +1152,10 @@ function drawShareCanvas(shareData) {
   ctx.fillText('⏱️ 暮光时间线', 40, y)
   ctx.restore()
 
-  y += 30
+  y += 28
 
   const tSegW = W - 80
-  const tSegH = 44
+  const tSegH = 40
   const tSegX = 40
   const tSegY = y
 
@@ -1204,14 +1206,14 @@ function drawShareCanvas(shareData) {
   ctx.fillStyle = '#6272a4'
   tickPositions.forEach((p, i) => {
     const tx = tSegX + p * tSegW
-    ctx.fillText(tickLabels[i], tx - 22, tSegY + tSegH + 18)
+    ctx.fillText(tickLabels[i], tx - 22, tSegY + tSegH + 16)
   })
   ctx.restore()
 
-  y += 90
+  y += 82
 
   ctx.save()
-  roundRect(ctx, 40, y, (W - 90) / 2, 110, 12)
+  roundRect(ctx, 40, y, (W - 90) / 2, 104, 12)
   ctx.fillStyle = 'rgba(255, 209, 102, 0.06)'
   ctx.fill()
   ctx.lineWidth = 1
@@ -1220,18 +1222,18 @@ function drawShareCanvas(shareData) {
 
   ctx.font = '15px "Noto Sans SC", sans-serif'
   ctx.fillStyle = '#ffd166'
-  ctx.fillText('🌞 摄影黄金时刻', 60, y + 32)
+  ctx.fillText('🌞 摄影黄金时刻', 60, y + 30)
 
   ctx.font = '13px "JetBrains Mono", monospace'
   ctx.fillStyle = '#e8edf5'
   const { goldenHours, blueHours } = data.summary
-  ctx.fillText(`晨间：${goldenHours.morning.startStr} → ${goldenHours.morning.endStr}`, 60, y + 62)
-  ctx.fillText(`傍晚：${goldenHours.evening.startStr} → ${goldenHours.evening.endStr}`, 60, y + 88)
+  ctx.fillText(`晨间：${goldenHours.morning.startStr} → ${goldenHours.morning.endStr}`, 60, y + 58)
+  ctx.fillText(`傍晚：${goldenHours.evening.startStr} → ${goldenHours.evening.endStr}`, 60, y + 82)
   ctx.restore()
 
   ctx.save()
   const card2X = 40 + (W - 90) / 2 + 10
-  roundRect(ctx, card2X, y, (W - 90) / 2, 110, 12)
+  roundRect(ctx, card2X, y, (W - 90) / 2, 104, 12)
   ctx.fillStyle = 'rgba(77, 157, 224, 0.06)'
   ctx.fill()
   ctx.lineWidth = 1
@@ -1240,15 +1242,15 @@ function drawShareCanvas(shareData) {
 
   ctx.font = '15px "Noto Sans SC", sans-serif'
   ctx.fillStyle = '#4d9de0'
-  ctx.fillText('🌅 蓝调时刻', card2X + 20, y + 32)
+  ctx.fillText('🌅 蓝调时刻', card2X + 20, y + 30)
 
   ctx.font = '13px "JetBrains Mono", monospace'
   ctx.fillStyle = '#e8edf5'
-  ctx.fillText(`晨间：${blueHours.morning.startStr} → ${blueHours.morning.endStr}`, card2X + 20, y + 62)
-  ctx.fillText(`傍晚：${blueHours.evening.startStr} → ${blueHours.evening.endStr}`, card2X + 20, y + 88)
+  ctx.fillText(`晨间：${blueHours.morning.startStr} → ${blueHours.morning.endStr}`, card2X + 20, y + 58)
+  ctx.fillText(`傍晚：${blueHours.evening.startStr} → ${blueHours.evening.endStr}`, card2X + 20, y + 82)
   ctx.restore()
 
-  y += 130
+  y += 124
 
   ctx.save()
   roundRect(ctx, 40, y, W - 80, 80, 12)
@@ -1276,16 +1278,16 @@ function drawShareCanvas(shareData) {
   ctx.textAlign = 'left'
   ctx.restore()
 
-  y += 108
+  y += 104
 
   ctx.save()
-  ctx.font = '12px "JetBrains Mono", monospace'
+  ctx.font = '13px "JetBrains Mono", monospace'
   ctx.fillStyle = '#6272a4'
   ctx.textAlign = 'center'
   ctx.fillText(`天文黑夜：${formatTime(data.summary.nightStart)} → 次日 ${formatTime(data.summary.nightEnd)}（${formatNightHours(data.summary.nightHours)}）`, W / 2, y)
   ctx.restore()
 
-  y += 30
+  y += 34
 
   ctx.save()
   const footerGrad = ctx.createLinearGradient(40, y, W - 40, y)
@@ -1356,28 +1358,23 @@ async function copyShareImage() {
   const canvas = document.getElementById('share-canvas')
   if (!canvas) return
 
-  try {
-    if (navigator.clipboard && window.ClipboardItem) {
-      const blob = await new Promise((resolve) => {
-        canvas.toBlob((b) => resolve(b), 'image/png')
-      })
-      if (blob) {
-        await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])
-        showToast('图片已复制到剪贴板')
-        return
-      }
-    }
-  } catch (e) {
-    console.warn('Clipboard API 复制失败，尝试降级方案:', e)
+  if (!(navigator.clipboard && window.ClipboardItem)) {
+    showToast('当前浏览器不支持复制图片，请使用「下载图片」')
+    return
   }
 
   try {
-    const dataUrl = canvas.toDataURL('image/png')
-    await copyToClipboard(dataUrl)
-    showToast('图片数据已复制（粘贴为链接，可下载完整图片）')
-  } catch (e2) {
-    console.error('复制图片失败:', e2)
-    showToast('复制图片失败，请尝试下载')
+    const blob = await new Promise((resolve, reject) => {
+      canvas.toBlob((b) => {
+        if (b) resolve(b)
+        else reject(new Error('生成图片失败'))
+      }, 'image/png')
+    })
+    await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])
+    showToast('图片已复制到剪贴板')
+  } catch (e) {
+    console.error('复制图片到剪贴板失败:', e)
+    showToast('复制失败，请点击「下载图片」保存')
   }
 }
 

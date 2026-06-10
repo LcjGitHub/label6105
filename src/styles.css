@@ -1612,3 +1612,7 @@ body {
     justify-content: center;
   }
 }
+
+.share-modal[hidden] {
+  display: none !important;
+}
