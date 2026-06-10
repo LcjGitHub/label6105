@@ -183,6 +183,7 @@
                   <h3 class="compare-card__title" id="compare-title-a"></h3>
                   <div class="timeline" id="compare-timeline-a"></div>
                 </div>
+                <div class="card card--score compare-card" id="score-card-a"></div>
                 <div class="card compare-card">
                   <h3 class="compare-card__title">详细时刻表</h3>
                   <div class="table-scroll">
@@ -228,6 +229,7 @@
                   <h3 class="compare-card__title" id="compare-title-b"></h3>
                   <div class="timeline" id="compare-timeline-b"></div>
                 </div>
+                <div class="card card--score compare-card" id="score-card-b"></div>
                 <div class="card compare-card">
                   <h3 class="compare-card__title">详细时刻表</h3>
                   <div class="table-scroll">
@@ -271,15 +273,16 @@
             <div class="calendar-header">
               <h2 id="cal-title" class="calendar-header__title"></h2>
               <div class="legend">
-                <span class="legend__item legend__item--excellent">极佳 ≥5h</span>
-                <span class="legend__item legend__item--good">良好 ≥3h</span>
-                <span class="legend__item legend__item--fair">一般 ≥1h</span>
-                <span class="legend__item legend__item--poor">不适宜</span>
+                <span class="legend__item legend__item--excellent">极佳 ≥85</span>
+                <span class="legend__item legend__item--good">良好 ≥70</span>
+                <span class="legend__item legend__item--fair">一般 ≥55</span>
+                <span class="legend__item legend__item--poor">较差 ≥35</span>
+                <span class="legend__item legend__item--verypoor">不适宜</span>
               </div>
             </div>
             <div class="calendar" id="calendar-grid"></div>
             <p class="calendar-note">
-              依据天文黑夜时长（太阳高度 &lt; −18°）评估 Deep-Sky 观测适宜度；高纬度夏季可能出现白夜。
+              综合天文黑夜时长、月相和季节因素评估观测适宜度评分（满分 100）；高纬度夏季可能出现白夜。
             </p>
           </div>
         </section>

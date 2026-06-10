@@ -215,8 +215,8 @@ function renderMoonInfo(moon) {
   document.getElementById('moon-set').textContent = moon.moonsetStr
 }
 
-function renderScoreCard(lat, dateStr, data, moon) {
-  const scoreEl = document.getElementById('score-card')
+function renderScoreCard(lat, dateStr, data, moon, targetId = 'score-card') {
+  const scoreEl = document.getElementById(targetId)
   if (!scoreEl) return
 
   const moonIllum = parseFloat(moon.illumination) / 100
@@ -235,7 +235,7 @@ function renderScoreCard(lat, dateStr, data, moon) {
   const { total, level, breakdown } = scoreData
 
   scoreEl.innerHTML = `
-    <div class="score-card ${level.class}">
+    <div class="score-card score-level--${level.class}">
       <div class="score-display">
         <div class="score-title">观测适宜度评分</div>
         <div class="score-number">${total}</div>
@@ -312,7 +312,17 @@ function renderResults(city, dateStr, data, moon) {
     .join('')
 
   const nightSummary = document.getElementById('night-summary')
-  const level = data.summary.nightHours >= 3 ? '适合深空观测' : data.summary.nightHours > 0 ? '观测窗口较短' : '无完整天文黑夜'
+  const moonIllum = parseFloat(moon.illumination) / 100
+  const scoreData = computeObservationScore({
+    nightHours: data.summary.nightHours,
+    lat: city.lat,
+    dateStr,
+    moonIllumination: moonIllum,
+    nightStart: data.summary.nightStart,
+    nightEnd: data.summary.nightEnd,
+    moonrise: moon.moonrise,
+    moonset: moon.moonset,
+  })
   const sunriseAz = data.summary.sunriseAzimuth
   const sunsetStartAz = data.summary.sunsetStartAzimuth
   const sunriseAzStr = sunriseAz
@@ -324,7 +334,7 @@ function renderResults(city, dateStr, data, moon) {
   const { goldenHours, blueHours } = data.summary
   nightSummary.innerHTML = `
     <h3>观测评估</h3>
-    <p class="night-summary__main">${level}</p>
+    <p class="night-summary__main night-summary--${scoreData.level.class}">${scoreData.level.label} · 综合评分 ${scoreData.total}/100</p>
     <h3 class="photo-section-title">📸 摄影师时段</h3>
     <div class="photo-grid">
       <div class="photo-card photo-card--golden">
@@ -363,7 +373,7 @@ function renderResults(city, dateStr, data, moon) {
   renderMoonInfo(moon)
 
   resultsEl.hidden = false
-  document.getElementById('moon-info').scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+  document.getElementById('score-card').scrollIntoView({ behavior: 'smooth', block: 'nearest' })
 }
 
 calcForm.addEventListener('submit', (e) => {
@@ -406,14 +416,11 @@ function renderCalendar(city, year, month, days) {
   }
 
   days.forEach((d) => {
-    const hoursStr =
-      d.nightHours != null && d.nightHours > 0
-        ? `${d.nightHours.toFixed(1)}h`
-        : '—'
+    const scoreStr = d.score != null ? `${d.score}` : '—'
     html += `
-      <div class="calendar__cell calendar__cell--${d.level.class}" title="${d.dateStr}&#10;天文黑夜: ${d.nightStartStr} ~ 次日 ${d.nightEndStr}&#10;时长: ${formatNightHours(d.nightHours)}">
+      <div class="calendar__cell calendar__cell--${d.level.class}" title="${d.dateStr}&#10;观测适宜度: ${d.level.label}（${d.score}/100）&#10;天文黑夜: ${d.nightStartStr} ~ 次日 ${d.nightEndStr}&#10;时长: ${formatNightHours(d.nightHours)}">
         <span class="calendar__day">${d.day}</span>
-        <span class="calendar__hours">${hoursStr}</span>
+        <span class="calendar__hours">${scoreStr} 分</span>
         <span class="calendar__badge">${d.level.label}</span>
       </div>`
   })
@@ -564,9 +571,19 @@ function renderCompareTable(tableId, rows) {
     .join('')
 }
 
-function renderCompareSummary(summaryId, data) {
+function renderCompareSummary(summaryId, data, lat, dateStr, moon) {
   const summaryEl = document.getElementById(summaryId)
-  const level = data.summary.nightHours >= 3 ? '适合深空观测' : data.summary.nightHours > 0 ? '观测窗口较短' : '无完整天文黑夜'
+  const moonIllum = parseFloat(moon.illumination) / 100
+  const scoreData = computeObservationScore({
+    nightHours: data.summary.nightHours,
+    lat,
+    dateStr,
+    moonIllumination: moonIllum,
+    nightStart: data.summary.nightStart,
+    nightEnd: data.summary.nightEnd,
+    moonrise: moon.moonrise,
+    moonset: moon.moonset,
+  })
   const sunriseAz = data.summary.sunriseAzimuth
   const sunsetStartAz = data.summary.sunsetStartAzimuth
   const sunriseAzStr = sunriseAz
@@ -578,7 +595,7 @@ function renderCompareSummary(summaryId, data) {
   const { goldenHours, blueHours } = data.summary
   summaryEl.innerHTML = `
     <h3>观测评估</h3>
-    <p class="night-summary__main">${level}</p>
+    <p class="night-summary__main night-summary--${scoreData.level.class}">${scoreData.level.label} · 综合评分 ${scoreData.total}/100</p>
     <h3 class="photo-section-title">📸 摄影师时段</h3>
     <div class="photo-grid photo-grid--compact">
       <div class="photo-card photo-card--golden">
@@ -737,7 +754,7 @@ function renderCompareSummaryDiff(dataA, dataB) {
   `
 }
 
-function renderCompareResults(city, dateStrA, dateStrB, dataA, dataB) {
+function renderCompareResults(city, dateStrA, dateStrB, dataA, dataB, moonA, moonB) {
   document.getElementById('compare-location').textContent = `${city.name}（${city.lat}°N, ${city.lng}°E）`
   document.getElementById('compare-title-a').textContent = `日期 A · ${dateStrA}`
   document.getElementById('compare-title-b').textContent = `日期 B · ${dateStrB}`
@@ -745,11 +762,14 @@ function renderCompareResults(city, dateStrA, dateStrB, dataA, dataB) {
   renderCompareTimeline('compare-timeline-a', dataA.keyTimes, dataA.summary, dataA.times)
   renderCompareTimeline('compare-timeline-b', dataB.keyTimes, dataB.summary, dataB.times)
 
+  renderScoreCard(city.lat, dateStrA, dataA, moonA, 'score-card-a')
+  renderScoreCard(city.lat, dateStrB, dataB, moonB, 'score-card-b')
+
   renderCompareTable('compare-table-a', dataA.allRows)
   renderCompareTable('compare-table-b', dataB.allRows)
 
-  renderCompareSummary('compare-summary-a', dataA)
-  renderCompareSummary('compare-summary-b', dataB)
+  renderCompareSummary('compare-summary-a', dataA, city.lat, dateStrA, moonA)
+  renderCompareSummary('compare-summary-b', dataB, city.lat, dateStrB, moonB)
 
   renderDiffTable(dataA, dataB)
   renderCompareSummaryDiff(dataA, dataB)
@@ -767,7 +787,9 @@ compareForm.addEventListener('submit', (e) => {
 
   const dataA = computeTwilightTimes(city.lat, city.lng, dateStrA)
   const dataB = computeTwilightTimes(city.lat, city.lng, dateStrB)
-  renderCompareResults(city, dateStrA, dateStrB, dataA, dataB)
+  const moonA = computeMoonInfo(city.lat, city.lng, dateStrA)
+  const moonB = computeMoonInfo(city.lat, city.lng, dateStrB)
+  renderCompareResults(city, dateStrA, dateStrB, dataA, dataB, moonA, moonB)
 })
 
 // Auto-calc on first visit to compare page

@@ -250,7 +250,19 @@ export function computeMonthCalendar(lat, lng, year, month) {
   for (let day = 1; day <= daysInMonth; day++) {
     const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
     const { summary, times } = computeTwilightTimes(lat, lng, dateStr)
-    const level = getObservationLevel(summary.nightHours)
+    const moonIllum = SunCalc.getMoonIllumination(parseLocalDate(dateStr))
+    const moonTimes = SunCalc.getMoonTimes(parseLocalDate(dateStr), lat, lng, false)
+
+    const scoreData = computeObservationScore({
+      nightHours: summary.nightHours,
+      lat,
+      dateStr,
+      moonIllumination: moonIllum.fraction,
+      nightStart: times.night,
+      nightEnd: times.nightEnd,
+      moonrise: moonTimes.rise,
+      moonset: moonTimes.set,
+    })
 
     days.push({
       day,
@@ -259,7 +271,8 @@ export function computeMonthCalendar(lat, lng, year, month) {
       nightHours: summary.nightHours,
       nightStart: times.night,
       nightEnd: times.nightEnd,
-      level,
+      level: scoreData.level,
+      score: scoreData.total,
       nightStartStr: formatTime(times.night),
       nightEndStr: formatTime(times.nightEnd),
     })
@@ -374,11 +387,11 @@ export { formatTime, diffHours }
  * 观测适宜度评分等级定义
  */
 export const SCORE_LEVELS = {
-  excellent: { minScore: 85, label: '极佳', class: 'score-excellent' },
-  good: { minScore: 70, label: '良好', class: 'score-good' },
-  fair: { minScore: 55, label: '一般', class: 'score-fair' },
-  poor: { minScore: 35, label: '较差', class: 'score-poor' },
-  veryPoor: { minScore: 0, label: '不适宜', class: 'score-verypoor' },
+  excellent: { minScore: 85, label: '极佳', class: 'excellent' },
+  good: { minScore: 70, label: '良好', class: 'good' },
+  fair: { minScore: 55, label: '一般', class: 'fair' },
+  poor: { minScore: 35, label: '较差', class: 'poor' },
+  veryPoor: { minScore: 0, label: '不适宜', class: 'verypoor' },
 }
 
 export function getScoreLevel(score) {
@@ -419,7 +432,7 @@ function calcNightHoursScore(nightHours) {
 }
 
 function calcMoonScore(illuminationFraction, nightStart, nightEnd, moonrise, moonset) {
-  const illumScoreBase = Math.max(0, 1 - illuminationFraction) * 30
+  const illumScoreBase = Math.max(0, 1 - illuminationFraction) * 35
 
   let moonInNightPenalty = 0
   if (nightStart && nightEnd && (moonrise || moonset)) {
@@ -577,7 +590,7 @@ export function generateObservingSuggestions(scoreData, moonPhase) {
     suggestions.tips.push('黑夜时间有限，建议精选观测目标')
   }
 
-  if (['新月', '残月'].includes(moonPhase)) {
+  if (['新月', '残月'].includes(moonPhase) && total >= 70) {
     suggestions.suitable.push('暗弱深空目标优先')
   } else if (moonPhase === '满月') {
     suggestions.suitable.unshift('月球细节摄影最佳时机')
