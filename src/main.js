@@ -30,6 +30,42 @@ navBtns.forEach((btn) => {
   })
 })
 
+const PAGE_NAMES = {
+  calc: '暮光计算',
+  compare: '日期对比',
+  calendar: '观测日历',
+}
+
+const SHORTCUT_MAP = { 1: 'calc', 2: 'compare', 3: 'calendar' }
+
+navBtns.forEach((btn) => {
+  const page = btn.dataset.page
+  const key = Object.entries(SHORTCUT_MAP).find(([, v]) => v === page)
+  if (key) {
+    const badge = document.createElement('span')
+    badge.className = 'nav__shortcut'
+    badge.textContent = `Ctrl+${key[0]}`
+    btn.style.position = 'relative'
+    btn.appendChild(badge)
+  }
+})
+
+function switchToPage(pageKey) {
+  const btn = document.querySelector(`.nav__btn[data-page="${pageKey}"]`)
+  if (!btn) return
+  btn.click()
+  console.log(`当前页面：${PAGE_NAMES[pageKey]}`)
+}
+
+document.addEventListener('keydown', (e) => {
+  if (!e.ctrlKey && !e.metaKey) return
+  const num = parseInt(e.key, 10)
+  if (num >= 1 && num <= 3) {
+    e.preventDefault()
+    switchToPage(SHORTCUT_MAP[num])
+  }
+})
+
 // ── Helpers ──
 let toastTimer = null
 
