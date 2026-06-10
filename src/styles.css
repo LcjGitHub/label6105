@@ -1054,6 +1054,20 @@ body {
   color: var(--text);
 }
 
+.compare-summary-diff__sub {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 0.35rem;
+  line-height: 1.5;
+}
+
+.compare-summary-diff__note {
+  font-size: 0.78rem;
+  color: var(--excellent);
+  margin-top: 0.35rem;
+  font-weight: 500;
+}
+
 .compare-summary-diff__badge {
   display: inline-block;
   font-size: 0.7rem;

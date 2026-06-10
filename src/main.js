@@ -10,6 +10,7 @@ import {
   getMinutesOfDay,
   computeObservationScore,
   generateObservingSuggestions,
+  compareMoonPhases,
 } from './astro.js'
 
 // ── Navigation ──
@@ -762,11 +763,12 @@ function renderDiffTable(dataA, dataB) {
     .join('')
 }
 
-function renderCompareSummaryDiff(dataA, dataB) {
+function renderCompareSummaryDiff(dataA, dataB, moonA, moonB) {
   const container = document.getElementById('compare-summary-diff')
   const nightHoursDiff = dataB.summary.nightHours - dataA.summary.nightHours
   const nightStartDiff = diffMinutes(dataA.summary.nightStart, dataB.summary.nightStart)
   const nightEndDiff = diffMinutes(dataA.summary.nightEnd, dataB.summary.nightEnd)
+  const moonDiff = compareMoonPhases(moonA, moonB)
 
   function getHoursBadge(diff) {
     if (Math.abs(diff) < 0.05) return '<span class="compare-summary-diff__badge badge--same">相同</span>'
@@ -786,6 +788,12 @@ function renderCompareSummaryDiff(dataA, dataB) {
         ? '<span class="compare-summary-diff__badge badge--better">B 更晚</span>'
         : '<span class="compare-summary-diff__badge badge--worse">B 更早</span>'
     }
+  }
+
+  function getMoonBadge(trendClass) {
+    if (trendClass === 'same') return '<span class="compare-summary-diff__badge badge--same">相近</span>'
+    if (trendClass === 'better') return '<span class="compare-summary-diff__badge badge--better">B 更暗</span>'
+    return '<span class="compare-summary-diff__badge badge--worse">B 更亮</span>'
   }
 
   container.innerHTML = `
@@ -810,6 +818,18 @@ function renderCompareSummaryDiff(dataA, dataB) {
         ${getMinutesBadge(nightEndDiff, 'end')}
       </div>
     </div>
+    <div class="compare-summary-diff__item">
+      <div class="compare-summary-diff__label">月相差异</div>
+      <div class="compare-summary-diff__value">
+        ${moonA.phase.emoji} ${moonA.phase.name} → ${moonB.phase.emoji} ${moonB.phase.name}
+        ${getMoonBadge(moonDiff.trendClass)}
+      </div>
+      <div class="compare-summary-diff__sub">
+        照度差：${moonDiff.illumDiffPercent > 0 ? '+' : ''}${moonDiff.illumDiffPercent}% ·
+        月龄差：${moonDiff.ageDiffStr}
+      </div>
+      <div class="compare-summary-diff__note">${moonDiff.observationNote}</div>
+    </div>
   `
 }
 
@@ -831,7 +851,7 @@ function renderCompareResults(city, dateStrA, dateStrB, dataA, dataB, moonA, moo
   renderCompareSummary('compare-summary-b', dataB, city.lat, dateStrB, moonB)
 
   renderDiffTable(dataA, dataB)
-  renderCompareSummaryDiff(dataA, dataB)
+  renderCompareSummaryDiff(dataA, dataB, moonA, moonB)
 
   compareResults.hidden = false
 }

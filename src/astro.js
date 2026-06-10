@@ -321,10 +321,45 @@ export function computeMoonInfo(lat, lng, dateStr) {
     age,
     ageStr: `${age.toFixed(1)} 天`,
     illumination: `${(illum.fraction * 100).toFixed(1)}%`,
+    illuminationFraction: illum.fraction,
     moonrise: times.rise,
     moonset: times.set,
     moonriseStr: formatTime(times.rise, '未升起'),
     moonsetStr: formatTime(times.set, '未落下'),
+  }
+}
+
+export function compareMoonPhases(moonA, moonB) {
+  const illumDiff = moonB.illuminationFraction - moonA.illuminationFraction
+  const illumDiffPercent = (illumDiff * 100).toFixed(1)
+  const ageDiff = moonB.age - moonA.age
+
+  let trend
+  let trendClass
+  let observationNote
+
+  if (Math.abs(illumDiff) < 0.02) {
+    trend = '月光强度相近'
+    trendClass = 'same'
+    observationNote = '两日夜空条件接近'
+  } else if (illumDiff > 0) {
+    trend = '日期 B 月光更强'
+    trendClass = 'worse'
+    observationNote = '日期 A 更适合暗天体观测'
+  } else {
+    trend = '日期 B 月光更弱'
+    trendClass = 'better'
+    observationNote = '日期 B 更适合暗天体观测'
+  }
+
+  return {
+    illumDiff,
+    illumDiffPercent,
+    ageDiff,
+    ageDiffStr: `${ageDiff > 0 ? '+' : ''}${ageDiff.toFixed(1)} 天`,
+    trend,
+    trendClass,
+    observationNote,
   }
 }
 
