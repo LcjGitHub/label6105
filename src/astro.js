@@ -133,4 +133,51 @@ export function computeMonthCalendar(lat, lng, year, month) {
   return days
 }
 
+const SYNODIC_MONTH = 29.53058867
+
+const MOON_PHASES = [
+  { min: 0, max: 0.0334, name: '新月', emoji: '🌑', desc: '月亮位于太阳与地球之间，以暗面朝向地球' },
+  { min: 0.0334, max: 0.2166, name: '娥眉月', emoji: '🌒', desc: '月亮逐渐露出一丝银钩，日落后出现在西方天空' },
+  { min: 0.2166, max: 0.2834, name: '上弦月', emoji: '🌓', desc: '月亮呈现右半边明亮，中午升起、半夜落下' },
+  { min: 0.2834, max: 0.4666, name: '盈凸月', emoji: '🌔', desc: '月亮大部分明亮，亮度逐日增加' },
+  { min: 0.4666, max: 0.5334, name: '满月', emoji: '🌕', desc: '月亮整个圆面都被照亮，整夜可见' },
+  { min: 0.5334, max: 0.7166, name: '亏凸月', emoji: '🌖', desc: '月亮大部分明亮，亮度逐日减少' },
+  { min: 0.7166, max: 0.7834, name: '下弦月', emoji: '🌗', desc: '月亮呈现左半边明亮，半夜升起、中午落下' },
+  { min: 0.7834, max: 0.9666, name: '残月', emoji: '🌘', desc: '月亮逐渐变成一丝银钩，黎明前出现在东方天空' },
+  { min: 0.9666, max: 1.0001, name: '新月', emoji: '🌑', desc: '月亮位于太阳与地球之间，以暗面朝向地球' },
+]
+
+export function getMoonPhase(phaseValue) {
+  return MOON_PHASES.find((p) => phaseValue >= p.min && phaseValue < p.max) || MOON_PHASES[0]
+}
+
+export function getMoonAge(phaseValue) {
+  return phaseValue * SYNODIC_MONTH
+}
+
+export function computeMoonInfo(lat, lng, dateStr) {
+  const date = parseLocalDate(dateStr)
+  const times = SunCalc.getMoonTimes(date, lat, lng, false)
+  const illum = SunCalc.getMoonIllumination(date)
+
+  const phase = getMoonPhase(illum.phase)
+  const age = getMoonAge(illum.phase)
+
+  return {
+    phase: {
+      name: phase.name,
+      emoji: phase.emoji,
+      desc: phase.desc,
+      value: illum.phase,
+    },
+    age,
+    ageStr: `${age.toFixed(1)} 天`,
+    illumination: `${(illum.fraction * 100).toFixed(1)}%`,
+    moonrise: times.rise,
+    moonset: times.set,
+    moonriseStr: formatTime(times.rise, '未升起'),
+    moonsetStr: formatTime(times.set, '未落下'),
+  }
+}
+
 export { formatTime, diffHours }

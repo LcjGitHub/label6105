@@ -6,6 +6,7 @@ import {
 import {
   computeTwilightTimes,
   computeMonthCalendar,
+  computeMoonInfo,
 } from './astro.js'
 
 // ── Navigation ──
@@ -102,7 +103,17 @@ function formatTime(d) {
   return d.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', hour12: false })
 }
 
-function renderResults(city, dateStr, data) {
+function renderMoonInfo(moon) {
+  document.getElementById('moon-icon').textContent = moon.phase.emoji
+  document.getElementById('moon-phase').innerHTML = `${moon.phase.emoji} ${moon.phase.name}`
+  document.getElementById('moon-desc').textContent = moon.phase.desc
+  document.getElementById('moon-age').textContent = moon.ageStr
+  document.getElementById('moon-illum').textContent = moon.illumination
+  document.getElementById('moon-rise').textContent = moon.moonriseStr
+  document.getElementById('moon-set').textContent = moon.moonsetStr
+}
+
+function renderResults(city, dateStr, data, moon) {
   document.getElementById('result-location').textContent = `${city.name}（${city.lat}°N, ${city.lng}°E）`
   document.getElementById('result-date').textContent = dateStr
 
@@ -134,6 +145,8 @@ function renderResults(city, dateStr, data) {
     </ul>
   `
 
+  renderMoonInfo(moon)
+
   resultsEl.hidden = false
   resultsEl.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
@@ -148,7 +161,8 @@ calcForm.addEventListener('submit', (e) => {
   if (Number.isNaN(lat) || Number.isNaN(lng)) return
 
   const data = computeTwilightTimes(lat, lng, dateStr)
-  renderResults(city, dateStr, data)
+  const moon = computeMoonInfo(lat, lng, dateStr)
+  renderResults(city, dateStr, data, moon)
 })
 
 // Auto-calc on load
