@@ -417,11 +417,16 @@ function renderCalendar(city, year, month, days) {
 
   days.forEach((d) => {
     const scoreStr = d.score != null ? `${d.score}` : '—'
+    const dayOfWeek = new Date(year, month - 1, d.day).getDay()
+    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
+    const weekendClass = isWeekend ? ' calendar__cell--weekend' : ''
+    const weekendIcon = isWeekend ? '<span class="calendar__weekend-icon">🌙</span>' : ''
     html += `
-      <div class="calendar__cell calendar__cell--${d.level.class}" title="${d.dateStr}&#10;观测适宜度: ${d.level.label}（${d.score}/100）&#10;天文黑夜: ${d.nightStartStr} ~ 次日 ${d.nightEndStr}&#10;时长: ${formatNightHours(d.nightHours)}">
+      <div class="calendar__cell calendar__cell--${d.level.class}${weekendClass}" title="${d.dateStr}&#10;观测适宜度: ${d.level.label}（${d.score}/100）&#10;天文黑夜: ${d.nightStartStr} ~ 次日 ${d.nightEndStr}&#10;时长: ${formatNightHours(d.nightHours)}${isWeekend ? '&#10;周末' : ''}">
         <span class="calendar__day">${d.day}</span>
         <span class="calendar__hours">${scoreStr} 分</span>
         <span class="calendar__badge">${d.level.label}</span>
+        ${weekendIcon}
       </div>`
   })
 
