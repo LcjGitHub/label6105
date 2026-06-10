@@ -30,6 +30,56 @@ navBtns.forEach((btn) => {
 })
 
 // ── Helpers ──
+let toastTimer = null
+
+function showToast(message, duration = 2000) {
+  const toast = document.getElementById('toast')
+  if (!toast) return
+
+  toast.textContent = message
+  toast.classList.add('toast--visible')
+
+  if (toastTimer) {
+    clearTimeout(toastTimer)
+  }
+
+  toastTimer = setTimeout(() => {
+    toast.classList.remove('toast--visible')
+    toastTimer = null
+  }, duration)
+}
+
+async function copyToClipboard(text) {
+  try {
+    await navigator.clipboard.writeText(text)
+    showToast('已复制')
+    return true
+  } catch (err) {
+    const textarea = document.createElement('textarea')
+    textarea.value = text
+    textarea.style.position = 'fixed'
+    textarea.style.opacity = '0'
+    document.body.appendChild(textarea)
+    textarea.select()
+    try {
+      document.execCommand('copy')
+      showToast('已复制')
+      return true
+    } catch (e) {
+      showToast('复制失败')
+      return false
+    } finally {
+      document.body.removeChild(textarea)
+    }
+  }
+}
+
+function buildCopyButton(row) {
+  if (!row.isPeriod) return '<td></td>'
+  const copyText = `${row.label}：${row.timeStr}`
+  return `<td><button class="copy-btn" type="button" data-copy="${encodeURIComponent(copyText)}" title="复制到剪贴板">📋</button></td>`
+}
+
 function todayStr() {
   const d = new Date()
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
@@ -306,6 +356,7 @@ function renderResults(city, dateStr, data, moon) {
       <td class="table__time">${row.timeStr}</td>
       ${azimuthCell}
       <td class="table__desc">${row.desc}</td>
+      ${buildCopyButton(row)}
     </tr>`
       }
     )
@@ -570,6 +621,7 @@ function renderCompareTable(tableId, rows) {
       <td class="table__time">${row.timeStr}</td>
       ${formatAzimuth(row.azimuth)}
       <td class="table__desc">${row.desc}</td>
+      ${buildCopyButton(row)}
     </tr>`
       }
     )
@@ -804,4 +856,14 @@ document.querySelector('[data-page="compare"]').addEventListener('click', () => 
     compareForm.dispatchEvent(new Event('submit'))
     compareInitialized = true
   }
+})
+
+// ── Copy Button Event Delegation ──
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('.copy-btn')
+  if (!btn) return
+  const encoded = btn.getAttribute('data-copy')
+  if (!encoded) return
+  const text = decodeURIComponent(encoded)
+  copyToClipboard(text)
 })

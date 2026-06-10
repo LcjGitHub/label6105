@@ -1315,3 +1315,64 @@ body {
     grid-template-columns: 75px 1fr 32px;
   }
 }
+
+/* Copy Button */
+.copy-btn {
+  font-size: 0.9rem;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  line-height: 1;
+}
+
+.copy-btn:hover {
+  background: var(--accent-glow);
+  border-color: var(--accent);
+  color: var(--accent);
+  transform: scale(1.05);
+}
+
+.copy-btn:active {
+  transform: scale(0.95);
+}
+
+.table td:last-child {
+  white-space: nowrap;
+  width: 60px;
+  text-align: center;
+}
+
+.table th:last-child {
+  text-align: center;
+  width: 60px;
+}
+
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  padding: 0.75rem 1.5rem;
+  background: rgba(30, 40, 60, 0.95);
+  color: var(--text);
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  box-shadow: 0 4px 20px var(--accent-glow), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  font-size: 0.9rem;
+  font-weight: 500;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.3s ease;
+  z-index: 9999;
+  backdrop-filter: blur(12px);
+}
+
+.toast--visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
