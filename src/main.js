@@ -7,6 +7,7 @@ import {
   computeTwilightTimes,
   computeMonthCalendar,
   computeMoonInfo,
+  getMinutesOfDay,
 } from './astro.js'
 
 // ── Navigation ──
@@ -65,26 +66,82 @@ applyCity(DEFAULT_CITY_ID)
 
 cityPreset.addEventListener('change', () => applyCity(cityPreset.value))
 
-function renderTimeline(keyTimes, summary) {
+function buildTimelineSegments(times, goldenHours, blueHours) {
+  const TOTAL_MIN = 24 * 60
+  const m = (d) => d == null ? null : getMinutesOfDay(d)
+
+  const segments = []
+  const addSeg = (startMin, endMin, className, label, subLabel = '') => {
+    if (startMin == null || endMin == null || endMin <= startMin) return
+    const width = ((endMin - startMin) / TOTAL_MIN) * 100
+    segments.push({
+      left: (startMin / TOTAL_MIN) * 100,
+      width,
+      className,
+      label,
+      subLabel,
+    })
+  }
+
+  const nightEndMin = m(times.nightEnd)
+  const nauticalDawnMin = m(times.nauticalDawn)
+  const dawnMin = m(times.dawn)
+  const blueMStart = m(blueHours.morning.start)
+  const blueMEnd = m(blueHours.morning.end)
+  const goldenMStart = m(goldenHours.morning.start)
+  const goldenMEnd = m(goldenHours.morning.end)
+  const goldenEStart = m(goldenHours.evening.start)
+  const goldenEEnd = m(goldenHours.evening.end)
+  const blueEStart = m(blueHours.evening.start)
+  const blueEEnd = m(blueHours.evening.end)
+  const duskMin = m(times.dusk)
+  const nauticalDuskMin = m(times.nauticalDusk)
+  const nightStartMin = m(times.night)
+
+  if (nightEndMin != null && nightEndMin > 0) {
+    addSeg(0, nightEndMin, 'timeline__segment--night', '夜')
+  }
+  addSeg(nightEndMin, nauticalDawnMin, 'timeline__segment--astro', '天文晨')
+  addSeg(nauticalDawnMin, dawnMin, 'timeline__segment--nautical', '航海晨')
+  addSeg(blueMStart, blueMEnd, 'timeline__segment--blue', '晨蓝调')
+  addSeg(goldenMStart, goldenMEnd, 'timeline__segment--golden', '晨黄金')
+  if (goldenMEnd != null && goldenEStart != null && goldenEStart > goldenMEnd) {
+    addSeg(goldenMEnd, goldenEStart, 'timeline__segment--day', '白昼')
+  }
+  addSeg(goldenEStart, goldenEEnd, 'timeline__segment--golden', '暮黄金')
+  addSeg(blueEStart, blueEEnd, 'timeline__segment--blue', '暮蓝调')
+  addSeg(duskMin, nauticalDuskMin, 'timeline__segment--civil', '民用暮')
+  addSeg(nauticalDuskMin, nightStartMin, 'timeline__segment--nautical', '航海暮')
+  if (nightStartMin != null && nightStartMin < TOTAL_MIN) {
+    addSeg(nightStartMin, TOTAL_MIN, 'timeline__segment--night', '夜')
+  }
+
+  return segments
+}
+
+function renderTimeline(keyTimes, summary, times) {
   const timeline = document.getElementById('timeline')
-  const eveningEvents = keyTimes.filter((k) =>
+  const { goldenHours, blueHours } = summary
+  const segments = buildTimelineSegments(times, goldenHours, blueHours)
+
+  const morningMarkers = [
+    { label: '天文晨光结束', time: times.nightEnd, key: 'nightEnd' },
+    { label: '航海晨光结束', time: times.nauticalDawn, key: 'nauticalDawn' },
+    { label: '晨蓝调开始', time: blueHours.morning.start, key: 'blueMorningStart', custom: true },
+    { label: '晨黄金开始', time: goldenHours.morning.start, key: 'goldenMorningStart', custom: true },
+  ]
+  const eveningMarkers = keyTimes.filter((k) =>
     ['dusk', 'nauticalDusk', 'night'].includes(k.key),
   )
-  const { goldenHours, blueHours } = summary
 
   timeline.innerHTML = `
     <div class="timeline__bar">
-      <div class="timeline__segment timeline__segment--day" style="flex:2">
-        <span class="segment-label">白昼</span>
-        <span class="segment-sub">黄金时刻</span>
-      </div>
-      <div class="timeline__segment timeline__segment--blue">
-        <span class="segment-label">蓝调时刻</span>
-      </div>
-      <div class="timeline__segment timeline__segment--civil">民用暮光</div>
-      <div class="timeline__segment timeline__segment--nautical">航海暮光</div>
-      <div class="timeline__segment timeline__segment--astro">天文暮光</div>
-      <div class="timeline__segment timeline__segment--night">天文黑夜</div>
+      ${segments.map((s) => `
+        <div class="timeline__segment ${s.className}" style="left:${s.left.toFixed(2)}%;width:${s.width.toFixed(2)}%">
+          <span class="segment-label">${s.label}</span>
+          ${s.subLabel ? `<span class="segment-sub">${s.subLabel}</span>` : ''}
+        </div>
+      `).join('')}
     </div>
     <div class="timeline__photography">
       <div class="photo-period photo-period--blue-morning">
@@ -104,17 +161,36 @@ function renderTimeline(keyTimes, summary) {
         <span class="photo-period__time">${blueHours.evening.startStr} → ${blueHours.evening.endStr}</span>
       </div>
     </div>
-    <div class="timeline__markers">
-      ${eveningEvents
-        .map(
-          (ev) => `
-        <div class="timeline__marker">
-          <span class="timeline__dot"></span>
-          <span class="timeline__label">${ev.label}</span>
-          <span class="timeline__time">${ev.timeStr}</span>
-        </div>`
-        )
-        .join('')}
+    <div class="timeline__markers-wrap">
+      <div class="timeline__markers-title">早晨暮光关键节点</div>
+      <div class="timeline__markers timeline__markers--morning">
+        ${morningMarkers
+          .filter((m) => m.time)
+          .map(
+            (ev) => `
+          <div class="timeline__marker">
+            <span class="timeline__dot timeline__dot--blue"></span>
+            <span class="timeline__label">${ev.label}</span>
+            <span class="timeline__time">${formatTime(ev.time)}</span>
+          </div>`
+          )
+          .join('')}
+      </div>
+    </div>
+    <div class="timeline__markers-wrap">
+      <div class="timeline__markers-title">傍晚暮光关键节点</div>
+      <div class="timeline__markers">
+        ${eveningMarkers
+          .map(
+            (ev) => `
+          <div class="timeline__marker">
+            <span class="timeline__dot"></span>
+            <span class="timeline__label">${ev.label}</span>
+            <span class="timeline__time">${ev.timeStr}</span>
+          </div>`
+          )
+          .join('')}
+      </div>
     </div>
     <div class="timeline__night">
       <strong>天文黑夜</strong>：${formatTime(summary.nightStart)} → 次日 ${formatTime(summary.nightEnd)}
@@ -141,17 +217,20 @@ function renderResults(city, dateStr, data, moon) {
   document.getElementById('result-location').textContent = `${city.name}（${city.lat}°N, ${city.lng}°E）`
   document.getElementById('result-date').textContent = dateStr
 
-  renderTimeline(data.keyTimes, data.summary)
+  renderTimeline(data.keyTimes, data.summary, data.times)
 
   const tbody = document.querySelector('#times-table tbody')
-  tbody.innerHTML = data.rows
+  tbody.innerHTML = data.allRows
     .map(
       (row) => {
         const azimuthCell = row.azimuth
           ? `<td class="table__azimuth"><span class="azimuth__dir">${row.azimuth.direction}</span><span class="azimuth__deg">${row.azimuth.degrees}°</span></td>`
           : `<td class="table__azimuth table__azimuth--empty">—</td>`
+        const rowClass = row.isPeriod
+          ? `table__row--period table__row--period-${row.periodType}`
+          : `table__row--${row.phase}`
         return `
-    <tr class="table__row table__row--${row.phase}">
+    <tr class="table__row ${rowClass}">
       <td>${row.label}</td>
       <td class="table__time">${row.timeStr}</td>
       ${azimuthCell}
@@ -314,26 +393,29 @@ function applyCompareCity(cityId) {
 
 compareCity.addEventListener('change', () => applyCompareCity(compareCity.value))
 
-function renderCompareTimeline(timelineId, keyTimes, summary) {
+function renderCompareTimeline(timelineId, keyTimes, summary, times) {
   const timeline = document.getElementById(timelineId)
-  const eveningEvents = keyTimes.filter((k) =>
+  const { goldenHours, blueHours } = summary
+  const segments = buildTimelineSegments(times, goldenHours, blueHours)
+
+  const morningMarkers = [
+    { label: '天文晨光结束', time: times.nightEnd, key: 'nightEnd' },
+    { label: '航海晨光结束', time: times.nauticalDawn, key: 'nauticalDawn' },
+    { label: '晨蓝调开始', time: blueHours.morning.start, key: 'blueMorningStart', custom: true },
+    { label: '晨黄金开始', time: goldenHours.morning.start, key: 'goldenMorningStart', custom: true },
+  ]
+  const eveningMarkers = keyTimes.filter((k) =>
     ['dusk', 'nauticalDusk', 'night'].includes(k.key),
   )
-  const { goldenHours, blueHours } = summary
 
   timeline.innerHTML = `
     <div class="timeline__bar">
-      <div class="timeline__segment timeline__segment--day" style="flex:2">
-        <span class="segment-label">白昼</span>
-        <span class="segment-sub">黄金时刻</span>
-      </div>
-      <div class="timeline__segment timeline__segment--blue">
-        <span class="segment-label">蓝调时刻</span>
-      </div>
-      <div class="timeline__segment timeline__segment--civil">民用暮光</div>
-      <div class="timeline__segment timeline__segment--nautical">航海暮光</div>
-      <div class="timeline__segment timeline__segment--astro">天文暮光</div>
-      <div class="timeline__segment timeline__segment--night">天文黑夜</div>
+      ${segments.map((s) => `
+        <div class="timeline__segment ${s.className}" style="left:${s.left.toFixed(2)}%;width:${s.width.toFixed(2)}%">
+          <span class="segment-label">${s.label}</span>
+          ${s.subLabel ? `<span class="segment-sub">${s.subLabel}</span>` : ''}
+        </div>
+      `).join('')}
     </div>
     <div class="timeline__photography">
       <div class="photo-period photo-period--blue-morning">
@@ -353,17 +435,36 @@ function renderCompareTimeline(timelineId, keyTimes, summary) {
         <span class="photo-period__time">${blueHours.evening.startStr} → ${blueHours.evening.endStr}</span>
       </div>
     </div>
-    <div class="timeline__markers">
-      ${eveningEvents
-        .map(
-          (ev) => `
-        <div class="timeline__marker">
-          <span class="timeline__dot"></span>
-          <span class="timeline__label">${ev.label}</span>
-          <span class="timeline__time">${ev.timeStr}</span>
-        </div>`
-        )
-        .join('')}
+    <div class="timeline__markers-wrap">
+      <div class="timeline__markers-title">早晨关键节点</div>
+      <div class="timeline__markers timeline__markers--morning">
+        ${morningMarkers
+          .filter((m) => m.time)
+          .map(
+            (ev) => `
+          <div class="timeline__marker">
+            <span class="timeline__dot timeline__dot--blue"></span>
+            <span class="timeline__label">${ev.label}</span>
+            <span class="timeline__time">${formatTime(ev.time)}</span>
+          </div>`
+          )
+          .join('')}
+      </div>
+    </div>
+    <div class="timeline__markers-wrap">
+      <div class="timeline__markers-title">傍晚关键节点</div>
+      <div class="timeline__markers">
+        ${eveningMarkers
+          .map(
+            (ev) => `
+          <div class="timeline__marker">
+            <span class="timeline__dot"></span>
+            <span class="timeline__label">${ev.label}</span>
+            <span class="timeline__time">${ev.timeStr}</span>
+          </div>`
+          )
+          .join('')}
+      </div>
     </div>
     <div class="timeline__night">
       <strong>天文黑夜</strong>：${formatTime(summary.nightStart)} → 次日 ${formatTime(summary.nightEnd)}
@@ -376,13 +477,18 @@ function renderCompareTable(tableId, rows) {
   const tbody = document.querySelector(`#${tableId} tbody`)
   tbody.innerHTML = rows
     .map(
-      (row) => `
-    <tr class="table__row table__row--${row.phase}">
+      (row) => {
+        const rowClass = row.isPeriod
+          ? `table__row--period table__row--period-${row.periodType}`
+          : `table__row--${row.phase}`
+        return `
+    <tr class="table__row ${rowClass}">
       <td>${row.label}</td>
       <td class="table__time">${row.timeStr}</td>
       ${formatAzimuth(row.azimuth)}
       <td class="table__desc">${row.desc}</td>
     </tr>`
+      }
     )
     .join('')
 }
@@ -466,27 +572,40 @@ function getDiffClass(mins) {
 
 function renderDiffTable(dataA, dataB) {
   const tbody = document.querySelector('#compare-diff-table tbody')
-  const compareKeys = ['sunset', 'dusk', 'nauticalDusk', 'night', 'nightEnd', 'nauticalDawn', 'dawn', 'sunrise']
-  const labelMap = {
-    sunset: '日落',
-    dusk: '民用暮光结束',
-    nauticalDusk: '航海暮光结束',
-    night: '天文黑夜开始',
-    nightEnd: '天文黑夜结束',
-    nauticalDawn: '航海晨光结束',
-    dawn: '民用晨光结束',
-    sunrise: '日出',
+  const compareKeys = [
+    { key: 'blueHourMorning', label: '晨蓝调时刻（开始）', period: 'blue', type: 'start' },
+    { key: 'goldenHourMorning', label: '晨黄金时刻（开始）', period: 'golden', type: 'start' },
+    { key: 'sunrise', label: '日出' },
+    { key: 'dawn', label: '民用晨光结束' },
+    { key: 'nauticalDawn', label: '航海晨光结束' },
+    { key: 'nightEnd', label: '天文黑夜结束' },
+    { key: 'sunset', label: '日落' },
+    { key: 'goldenHourEvening', label: '暮黄金时刻（开始）', period: 'golden', type: 'start' },
+    { key: 'blueHourEvening', label: '暮蓝调时刻（开始）', period: 'blue', type: 'start' },
+    { key: 'dusk', label: '民用暮光结束' },
+    { key: 'nauticalDusk', label: '航海暮光结束' },
+    { key: 'night', label: '天文黑夜开始' },
+  ]
+
+  const getTimeFor = (data, entry) => {
+    if (entry.period) {
+      const periods = entry.period === 'golden' ? data.goldenHours : data.blueHours
+      const which = entry.key.includes('Morning') ? 'morning' : 'evening'
+      return entry.type === 'start' ? periods[which].start : periods[which].end
+    }
+    return data.times[entry.key]
   }
 
   tbody.innerHTML = compareKeys
-    .map((key) => {
-      const timeA = dataA.times[key]
-      const timeB = dataB.times[key]
+    .map((entry) => {
+      const timeA = getTimeFor(dataA, entry)
+      const timeB = getTimeFor(dataB, entry)
       const diff = diffMinutes(timeA, timeB)
       const diffClass = getDiffClass(diff)
+      const rowClass = entry.period ? `table__row--period table__row--period-${entry.period}` : ''
       return `
-        <tr>
-          <td>${labelMap[key] || key}</td>
+        <tr class="${rowClass}">
+          <td>${entry.label}</td>
           <td class="table__time">${formatTime(timeA)}</td>
           <td class="table__time">${formatTime(timeB)}</td>
           <td class="${diffClass}">${formatDiffMinutes(diff)}</td>
@@ -552,11 +671,11 @@ function renderCompareResults(city, dateStrA, dateStrB, dataA, dataB) {
   document.getElementById('compare-title-a').textContent = `日期 A · ${dateStrA}`
   document.getElementById('compare-title-b').textContent = `日期 B · ${dateStrB}`
 
-  renderCompareTimeline('compare-timeline-a', dataA.keyTimes, dataA.summary)
-  renderCompareTimeline('compare-timeline-b', dataB.keyTimes, dataB.summary)
+  renderCompareTimeline('compare-timeline-a', dataA.keyTimes, dataA.summary, dataA.times)
+  renderCompareTimeline('compare-timeline-b', dataB.keyTimes, dataB.summary, dataB.times)
 
-  renderCompareTable('compare-table-a', dataA.rows)
-  renderCompareTable('compare-table-b', dataB.rows)
+  renderCompareTable('compare-table-a', dataA.allRows)
+  renderCompareTable('compare-table-b', dataB.allRows)
 
   renderCompareSummary('compare-summary-a', dataA)
   renderCompareSummary('compare-summary-b', dataB)

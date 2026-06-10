@@ -260,40 +260,89 @@ body {
 }
 
 .timeline__bar {
-  display: flex;
-  height: 28px;
+  position: relative;
+  height: 30px;
   border-radius: 6px;
   overflow: hidden;
   margin-bottom: 1.25rem;
   border: 1px solid var(--border);
+  background: #0f1525;
 }
 
 .timeline__segment {
+  position: absolute;
+  top: 0;
+  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.65rem;
+  font-size: 0.6rem;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.7);
-  min-width: 0;
+  color: rgba(255, 255, 255, 0.8);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  padding: 0 2px;
 }
 
-.timeline__segment--day { background: linear-gradient(90deg, #3d5a80, var(--golden), #5c7a9e); flex: 3; flex-direction: column; gap: 2px; }
-.timeline__segment--blue { background: linear-gradient(90deg, var(--blue-hour-dark), var(--blue-hour)); color: #fff; flex: 1; }
-.timeline__segment--civil { background: var(--civil); color: #1a1008; flex: 1; }
-.timeline__segment--nautical { background: var(--nautical); color: #1a1020; flex: 1; }
-.timeline__segment--astro { background: var(--astro); flex: 1; }
-.timeline__segment--night { background: #0f1525; flex: 2; }
+.timeline__segment--day { background: linear-gradient(180deg, #3d5a80, #5c7a9e); }
+.timeline__segment--golden { background: linear-gradient(180deg, var(--golden-dark), var(--golden)); color: #1a1200; font-weight: 600; }
+.timeline__segment--blue { background: linear-gradient(180deg, var(--blue-hour-dark), var(--blue-hour)); color: #fff; }
+.timeline__segment--civil { background: var(--civil); color: #1a1008; }
+.timeline__segment--nautical { background: var(--nautical); color: #1a1020; }
+.timeline__segment--astro { background: var(--astro); }
+.timeline__segment--night { background: #0f1525; }
 
 .segment-label {
-  font-size: 0.65rem;
+  font-size: 0.6rem;
   font-weight: 600;
 }
 
 .segment-sub {
-  font-size: 0.55rem;
+  font-size: 0.5rem;
   opacity: 0.85;
   font-weight: 500;
+}
+
+/* Timeline markers groups */
+.timeline__markers-wrap {
+  margin-bottom: 0.85rem;
+}
+
+.timeline__markers-title {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 0.4rem;
+  padding-left: 2px;
+}
+
+.timeline__dot--blue {
+  background: var(--blue-hour);
+  box-shadow: 0 0 8px var(--blue-hour-glow);
+}
+
+/* Photography period table rows */
+.table__row--period td:first-child {
+  font-weight: 600;
+}
+
+.table__row--period-golden td:first-child {
+  border-left: 3px solid var(--golden);
+  color: var(--golden);
+}
+
+.table__row--period-golden .table__time {
+  color: var(--golden);
+}
+
+.table__row--period-blue td:first-child {
+  border-left: 3px solid var(--blue-hour);
+  color: var(--blue-hour);
+}
+
+.table__row--period-blue .table__time {
+  color: var(--blue-hour);
 }
 
 /* Timeline legend */

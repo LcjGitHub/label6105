@@ -114,6 +114,60 @@ export function computeBlueHours(times) {
   }
 }
 
+export function getMinutesOfDay(date) {
+  if (!date || Number.isNaN(date.getTime())) return null
+  return date.getHours() * 60 + date.getMinutes() + date.getSeconds() / 60
+}
+
+export function getPhotographyRows(goldenHours, blueHours) {
+  return [
+    {
+      key: 'blueHourMorning',
+      label: blueHours.morning.label,
+      desc: `民用晨光期间 · ${blueHours.morning.startStr} ~ ${blueHours.morning.endStr}`,
+      phase: 'morning',
+      time: blueHours.morning.start,
+      timeStr: `${blueHours.morning.startStr} → ${blueHours.morning.endStr}`,
+      azimuth: null,
+      isPeriod: true,
+      periodType: 'blue',
+    },
+    {
+      key: 'goldenHourMorning',
+      label: goldenHours.morning.label,
+      desc: `日出后一小时 · ${goldenHours.morning.startStr} ~ ${goldenHours.morning.endStr}`,
+      phase: 'morning',
+      time: goldenHours.morning.start,
+      timeStr: `${goldenHours.morning.startStr} → ${goldenHours.morning.endStr}`,
+      azimuth: null,
+      isPeriod: true,
+      periodType: 'golden',
+    },
+    {
+      key: 'goldenHourEvening',
+      label: goldenHours.evening.label,
+      desc: `日落前一小时 · ${goldenHours.evening.startStr} ~ ${goldenHours.evening.endStr}`,
+      phase: 'evening',
+      time: goldenHours.evening.start,
+      timeStr: `${goldenHours.evening.startStr} → ${goldenHours.evening.endStr}`,
+      azimuth: null,
+      isPeriod: true,
+      periodType: 'golden',
+    },
+    {
+      key: 'blueHourEvening',
+      label: blueHours.evening.label,
+      desc: `民用暮光期间 · ${blueHours.evening.startStr} ~ ${blueHours.evening.endStr}`,
+      phase: 'evening',
+      time: blueHours.evening.start,
+      timeStr: `${blueHours.evening.startStr} → ${blueHours.evening.endStr}`,
+      azimuth: null,
+      isPeriod: true,
+      periodType: 'blue',
+    },
+  ]
+}
+
 /**
  * 计算指定位置、日期的暮光时刻
  */
@@ -123,6 +177,7 @@ export function computeTwilightTimes(lat, lng, dateStr) {
   const azimuths = computeAzimuthForEvents(lat, lng, times)
   const goldenHours = computeGoldenHours(times)
   const blueHours = computeBlueHours(times)
+  const photographyRows = getPhotographyRows(goldenHours, blueHours)
 
   const rows = TIME_EVENTS.map((ev) => ({
     ...ev,
@@ -130,6 +185,8 @@ export function computeTwilightTimes(lat, lng, dateStr) {
     timeStr: formatTime(times[ev.key]),
     azimuth: azimuths[ev.key] || null,
   }))
+
+  const allRows = [...photographyRows, ...rows]
 
   const nightStart = times.night
   const nightEnd = times.nightEnd
@@ -142,6 +199,8 @@ export function computeTwilightTimes(lat, lng, dateStr) {
     date,
     times,
     rows,
+    allRows,
+    photographyRows,
     azimuths,
     goldenHours,
     blueHours,
