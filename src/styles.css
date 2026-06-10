@@ -331,8 +331,16 @@ body {
 }
 
 /* Table */
+.table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin: 0 -0.25rem;
+  padding: 0 0.25rem;
+}
+
 .table {
   width: 100%;
+  min-width: 520px;
   border-collapse: collapse;
   font-size: 0.875rem;
 }

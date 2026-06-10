@@ -89,7 +89,7 @@ export function computeTwilightTimes(lat, lng, dateStr) {
       astronomicalNight,
       solarNoon: times.solarNoon,
       sunriseAzimuth: azimuths.sunrise,
-      sunsetAzimuth: azimuths.sunset,
+      sunsetStartAzimuth: azimuths.sunsetStart,
     },
   }
 }

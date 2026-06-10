@@ -139,19 +139,19 @@ function renderResults(city, dateStr, data, moon) {
   const nightSummary = document.getElementById('night-summary')
   const level = data.summary.nightHours >= 3 ? '适合深空观测' : data.summary.nightHours > 0 ? '观测窗口较短' : '无完整天文黑夜'
   const sunriseAz = data.summary.sunriseAzimuth
-  const sunsetAz = data.summary.sunsetAzimuth
+  const sunsetStartAz = data.summary.sunsetStartAzimuth
   const sunriseAzStr = sunriseAz
     ? `<span class="azimuth__dir">${sunriseAz.direction}</span> <span class="azimuth__deg">${sunriseAz.degrees}°</span>`
     : '—'
-  const sunsetAzStr = sunsetAz
-    ? `<span class="azimuth__dir">${sunsetAz.direction}</span> <span class="azimuth__deg">${sunsetAz.degrees}°</span>`
+  const sunsetStartAzStr = sunsetStartAz
+    ? `<span class="azimuth__dir">${sunsetStartAz.direction}</span> <span class="azimuth__deg">${sunsetStartAz.degrees}°</span>`
     : '—'
   nightSummary.innerHTML = `
     <h3>观测评估</h3>
     <p class="night-summary__main">${level}</p>
     <ul class="night-summary__list">
       <li>日出方位：<strong>${sunriseAzStr}</strong></li>
-      <li>日落方位：<strong>${sunsetAzStr}</strong></li>
+      <li>日落开始方位：<strong>${sunsetStartAzStr}</strong></li>
       <li>民用暮光结束（暮）：<strong>${formatTime(data.times.dusk)}</strong></li>
       <li>天文暮光开始（暮）：<strong>${formatTime(data.times.nauticalDusk)}</strong></li>
       <li>天文暮光结束（暮）：<strong>${formatTime(data.times.night)}</strong></li>
