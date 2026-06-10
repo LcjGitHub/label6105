@@ -230,11 +230,247 @@ calendarForm.addEventListener('submit', (e) => {
   renderCalendar(city, year, month, days)
 })
 
-// Auto-generate calendar on first visit to page 2
+// Auto-generate calendar on first visit to page 3
 let calendarInitialized = false
 document.querySelector('[data-page="calendar"]').addEventListener('click', () => {
   if (!calendarInitialized) {
     calendarForm.dispatchEvent(new Event('submit'))
     calendarInitialized = true
+  }
+})
+
+// ── Page 2: Date Comparison ──
+const compareCity = document.getElementById('compare-city')
+const compareDateA = document.getElementById('compare-date-a')
+const compareDateB = document.getElementById('compare-date-b')
+const compareForm = document.getElementById('compare-form')
+const compareResults = document.getElementById('compare-results')
+
+populateCitySelect(compareCity, DEFAULT_CITY_ID)
+
+function addDaysToToday(days) {
+  const d = new Date()
+  d.setDate(d.getDate() + days)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+compareDateA.value = todayStr()
+compareDateB.value = addDaysToToday(30)
+
+function applyCompareCity(cityId) {
+  const city = getCityById(cityId)
+  return city
+}
+
+compareCity.addEventListener('change', () => applyCompareCity(compareCity.value))
+
+function renderCompareTimeline(timelineId, keyTimes, summary) {
+  const timeline = document.getElementById(timelineId)
+  const eveningEvents = keyTimes.filter((k) =>
+    ['dusk', 'nauticalDusk', 'night'].includes(k.key),
+  )
+
+  timeline.innerHTML = `
+    <div class="timeline__bar">
+      <div class="timeline__segment timeline__segment--day" style="flex:2">白昼</div>
+      <div class="timeline__segment timeline__segment--civil">民用暮光</div>
+      <div class="timeline__segment timeline__segment--nautical">航海暮光</div>
+      <div class="timeline__segment timeline__segment--astro">天文暮光</div>
+      <div class="timeline__segment timeline__segment--night">天文黑夜</div>
+    </div>
+    <div class="timeline__markers">
+      ${eveningEvents
+        .map(
+          (ev) => `
+        <div class="timeline__marker">
+          <span class="timeline__dot"></span>
+          <span class="timeline__label">${ev.label}</span>
+          <span class="timeline__time">${ev.timeStr}</span>
+        </div>`
+        )
+        .join('')}
+    </div>
+    <div class="timeline__night">
+      <strong>天文黑夜</strong>：${formatTime(summary.nightStart)} → 次日 ${formatTime(summary.nightEnd)}
+      （${formatNightHours(summary.nightHours)}）
+    </div>
+  `
+}
+
+function renderCompareTable(tableId, rows) {
+  const tbody = document.querySelector(`#${tableId} tbody`)
+  tbody.innerHTML = rows
+    .map(
+      (row) => `
+    <tr class="table__row table__row--${row.phase}">
+      <td>${row.label}</td>
+      <td class="table__time">${row.timeStr}</td>
+      <td class="table__desc">${row.desc}</td>
+    </tr>`
+    )
+    .join('')
+}
+
+function renderCompareSummary(summaryId, data) {
+  const summaryEl = document.getElementById(summaryId)
+  const level = data.summary.nightHours >= 3 ? '适合深空观测' : data.summary.nightHours > 0 ? '观测窗口较短' : '无完整天文黑夜'
+  summaryEl.innerHTML = `
+    <h3>观测评估</h3>
+    <p class="night-summary__main">${level}</p>
+    <ul class="night-summary__list">
+      <li>民用暮光结束（暮）：<strong>${formatTime(data.times.dusk)}</strong></li>
+      <li>天文暮光开始（暮）：<strong>${formatTime(data.times.nauticalDusk)}</strong></li>
+      <li>天文暮光结束（暮）：<strong>${formatTime(data.times.night)}</strong></li>
+      <li>天文晨光结束（晨）：<strong>${formatTime(data.times.nightEnd)}</strong></li>
+      <li>天文黑夜时长：<strong>${formatNightHours(data.summary.nightHours)}</strong></li>
+    </ul>
+  `
+}
+
+function diffMinutes(timeA, timeB) {
+  if (!timeA || !timeB || Number.isNaN(timeA.getTime()) || Number.isNaN(timeB.getTime())) return null
+  return Math.round((timeB - timeA) / (1000 * 60))
+}
+
+function formatDiffMinutes(mins) {
+  if (mins == null) return '—'
+  if (mins === 0) return '0 分'
+  const sign = mins > 0 ? '+' : '−'
+  const abs = Math.abs(mins)
+  const hrs = Math.floor(abs / 60)
+  const m = abs % 60
+  if (hrs > 0) return `${sign}${hrs} 时 ${m} 分`
+  return `${sign}${m} 分`
+}
+
+function getDiffClass(mins) {
+  if (mins == null) return 'diff-zero'
+  if (mins > 0) return 'diff-positive'
+  if (mins < 0) return 'diff-negative'
+  return 'diff-zero'
+}
+
+function renderDiffTable(dataA, dataB) {
+  const tbody = document.querySelector('#compare-diff-table tbody')
+  const compareKeys = ['sunset', 'dusk', 'nauticalDusk', 'night', 'nightEnd', 'nauticalDawn', 'dawn', 'sunrise']
+  const labelMap = {
+    sunset: '日落',
+    dusk: '民用暮光结束',
+    nauticalDusk: '航海暮光结束',
+    night: '天文黑夜开始',
+    nightEnd: '天文黑夜结束',
+    nauticalDawn: '航海晨光结束',
+    dawn: '民用晨光结束',
+    sunrise: '日出',
+  }
+
+  tbody.innerHTML = compareKeys
+    .map((key) => {
+      const timeA = dataA.times[key]
+      const timeB = dataB.times[key]
+      const diff = diffMinutes(timeA, timeB)
+      const diffClass = getDiffClass(diff)
+      return `
+        <tr>
+          <td>${labelMap[key] || key}</td>
+          <td class="table__time">${formatTime(timeA)}</td>
+          <td class="table__time">${formatTime(timeB)}</td>
+          <td class="${diffClass}">${formatDiffMinutes(diff)}</td>
+        </tr>
+      `
+    })
+    .join('')
+}
+
+function renderCompareSummaryDiff(dataA, dataB) {
+  const container = document.getElementById('compare-summary-diff')
+  const nightHoursDiff = dataB.summary.nightHours - dataA.summary.nightHours
+  const nightStartDiff = diffMinutes(dataA.summary.nightStart, dataB.summary.nightStart)
+  const nightEndDiff = diffMinutes(dataA.summary.nightEnd, dataB.summary.nightEnd)
+
+  function getHoursBadge(diff) {
+    if (Math.abs(diff) < 0.05) return '<span class="compare-summary-diff__badge badge--same">相同</span>'
+    if (diff > 0) return '<span class="compare-summary-diff__badge badge--better">B 更长</span>'
+    return '<span class="compare-summary-diff__badge badge--worse">B 更短</span>'
+  }
+
+  function getMinutesBadge(mins, context) {
+    if (mins == null) return '<span class="compare-summary-diff__badge badge--same">—</span>'
+    if (mins === 0) return '<span class="compare-summary-diff__badge badge--same">相同</span>'
+    if (context === 'start') {
+      return mins < 0
+        ? '<span class="compare-summary-diff__badge badge--better">B 更早</span>'
+        : '<span class="compare-summary-diff__badge badge--worse">B 更晚</span>'
+    } else {
+      return mins > 0
+        ? '<span class="compare-summary-diff__badge badge--better">B 更晚</span>'
+        : '<span class="compare-summary-diff__badge badge--worse">B 更早</span>'
+    }
+  }
+
+  container.innerHTML = `
+    <div class="compare-summary-diff__item">
+      <div class="compare-summary-diff__label">天文黑夜时长差异</div>
+      <div class="compare-summary-diff__value">
+        ${nightHoursDiff >= 0 ? '+' : ''}${nightHoursDiff.toFixed(2)} 小时
+        ${getHoursBadge(nightHoursDiff)}
+      </div>
+    </div>
+    <div class="compare-summary-diff__item">
+      <div class="compare-summary-diff__label">天文黑夜开始</div>
+      <div class="compare-summary-diff__value">
+        ${formatDiffMinutes(nightStartDiff)}
+        ${getMinutesBadge(nightStartDiff, 'start')}
+      </div>
+    </div>
+    <div class="compare-summary-diff__item">
+      <div class="compare-summary-diff__label">天文黑夜结束</div>
+      <div class="compare-summary-diff__value">
+        ${formatDiffMinutes(nightEndDiff)}
+        ${getMinutesBadge(nightEndDiff, 'end')}
+      </div>
+    </div>
+  `
+}
+
+function renderCompareResults(city, dateStrA, dateStrB, dataA, dataB) {
+  document.getElementById('compare-location').textContent = `${city.name}（${city.lat}°N, ${city.lng}°E）`
+  document.getElementById('compare-title-a').textContent = `日期 A · ${dateStrA}`
+  document.getElementById('compare-title-b').textContent = `日期 B · ${dateStrB}`
+
+  renderCompareTimeline('compare-timeline-a', dataA.keyTimes, dataA.summary)
+  renderCompareTimeline('compare-timeline-b', dataB.keyTimes, dataB.summary)
+
+  renderCompareTable('compare-table-a', dataA.rows)
+  renderCompareTable('compare-table-b', dataB.rows)
+
+  renderCompareSummary('compare-summary-a', dataA)
+  renderCompareSummary('compare-summary-b', dataB)
+
+  renderDiffTable(dataA, dataB)
+  renderCompareSummaryDiff(dataA, dataB)
+
+  compareResults.hidden = false
+}
+
+compareForm.addEventListener('submit', (e) => {
+  e.preventDefault()
+  const city = getCityById(compareCity.value)
+  const dateStrA = compareDateA.value
+  const dateStrB = compareDateB.value
+
+  if (!dateStrA || !dateStrB) return
+
+  const dataA = computeTwilightTimes(city.lat, city.lng, dateStrA)
+  const dataB = computeTwilightTimes(city.lat, city.lng, dateStrB)
+  renderCompareResults(city, dateStrA, dateStrB, dataA, dataB)
+})
+
+// Auto-calc on first visit to compare page
+let compareInitialized = false
+document.querySelector('[data-page="compare"]').addEventListener('click', () => {
+  if (!compareInitialized) {
+    compareForm.dispatchEvent(new Event('submit'))
+    compareInitialized = true
   }
 })
